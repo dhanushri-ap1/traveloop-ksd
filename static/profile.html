@@ -513,12 +513,12 @@ body {
 <!-- Top nav -->
 <nav class="topnav">
   <div class="topnav-inner">
-    <a class="nav-logo" href="dashboard.html">
+    <a class="nav-logo" href="{{ url_for('dashboard') }}">
       <div class="nav-logo-icon">✈</div>
       <div class="nav-logo-text">Travel<span>oop</span></div>
     </a>
     <div class="nav-links">
-      <a class="nav-link" href="dashboard.html">Dashboard</a>
+      <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
       <button class="nav-link" onclick="openModal('editModal')">✏️ Edit Profile</button>
       <button class="nav-link primary" onclick="openModal('countryModal')">🌍 Add Country</button>
     </div>
