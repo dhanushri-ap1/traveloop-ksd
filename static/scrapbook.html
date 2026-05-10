@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Calendars & Shared Plans</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        body {
+            text-align: center;
+            padding-top: 100px;
+        }
+
+        .scrapbook {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .memory-card {
+            width: 300px;
+            position: relative;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .memory-card img {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            max-height: 200px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .memory-card textarea {
+            width: 100%;
+            height: 80px;
+            resize: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .memory-card textarea:focus {
+            border-color: var(--primary-cyan);
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(255, 65, 108, 0.4);
+            z-index: 10;
+        }
+
+        .memory-card:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 40px auto;
+            max-width: 400px;
+            padding: 30px;
+        }
+
+        input[type="file"] {
+            color: var(--text-muted);
+        }
+
+        input[type="file"]::file-selector-button {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            border-color: var(--primary-cyan);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .page-title {
+            font-size: 48px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar animate-up">
+        <div class="nav-logo">
+            <a href="homepage.html">Traveloop</a>
+        </div>
+        <div class="nav-links">
+            <a href="homepage.html" class="nav-item">Home</a>
+            <a href="mapping3.html" class="nav-item">Map</a>
+            <a href="todolist.html" class="nav-item">To-Do list</a>
+            <a href="pr.html" class="nav-item">Chat Bot</a>
+            <a href="scrapbook.html" class="nav-item" style="color: var(--primary-cyan);">Snaps</a>
+        </div>
+    </nav>
+
+    <h1 class="page-title text-gradient animate-up delay-1">Visual Calendars & Shared Plans</h1>
+    
+    <div class="upload-section glass-card animate-up delay-2">
+        <input type="file" id="imageUpload" accept="image/*">
+        <button class="btn-gradient" onclick="addMemory()">Share Your Plan</button>
+    </div>
+
+    <div class="scrapbook" id="scrapbook"></div>
+    
+    <script>
+        let db;
+        
+        function openDatabase() {
+            let request = indexedDB.open("MemoryDB", 1);
+            request.onupgradeneeded = function(event) {
+                let db = event.target.result;
+                if (!db.objectStoreNames.contains("memories")) {
+                    db.createObjectStore("memories", { keyPath: "id", autoIncrement: true });
+                }
+            };
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadMemories();
+            };
+            request.onerror = function(event) {
+                console.error("Database error: ", event.target.error);
+            };
+        }
+        
+        function loadMemories() {
+            let transaction = db.transaction("memories", "readonly");
+            let store = transaction.objectStore("memories");
+            let request = store.getAll();
+            request.onsuccess = function() {
+                let memories = request.result;
+                let scrapbook = document.getElementById('scrapbook');
+                scrapbook.innerHTML = "";
+                memories.forEach((memory, index) => addMemoryToDOM(memory.id, memory.image, memory.description, index));
+            };
+        }
+        
+        function addMemory() {
+            let fileInput = document.getElementById('imageUpload');
+            if (fileInput.files.length === 0) {
+                alert('Please select an image to upload.');
+                return;
+            }
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let imageData = e.target.result;
+                saveMemory(imageData, "");
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function saveMemory(image, description) {
+            let transaction = db.transaction("memories", "readwrite");
+            let store = transaction.objectStore("memories");
+            let request = store.add({ image: image, description: description });
+            request.onsuccess = function() {
+                loadMemories();
+                document.getElementById('imageUpload').value = '';
+            };
+        }
+        
+        function updateMemoryDescription(id, newDescription) {
+            let transaction = db.transaction("memories", "readwrite");
+            let store = transaction.objectStore("memories");
+            let request = store.get(id);
+            request.onsuccess = function() {
+                let memory = request.result;
+                memory.description = newDescription;
+                store.put(memory);
+            };
+        }
+        
+        function deleteMemory(id) {
+            let transaction = db.transaction("memories", "readwrite");
+            let store = transaction.objectStore("memories");
+            store.delete(id).onsuccess = function() {
+                loadMemories();
+            };
+        }
+        
+        function addMemoryToDOM(id, imageSrc, description, index) {
+            let scrapbook = document.getElementById('scrapbook');
+            let newMemory = document.createElement('div');
+            newMemory.classList.add('memory-card', 'glass-card', 'animate-up');
+            newMemory.style.animationDelay = `${(index % 5) * 0.1}s`;
+            newMemory.innerHTML = `
+                <button class="delete-btn" onclick="deleteMemory(${id})">&times;</button>
+                <img src="${imageSrc}" alt="New Memory">
+                <textarea placeholder="Add a description..." oninput="updateMemoryDescription(${id}, this.value)">${description}</textarea>
+            `;
+            scrapbook.appendChild(newMemory);
+        }
+        
+        window.onload = openDatabase;
+    </script>
+</body>
+</html>
