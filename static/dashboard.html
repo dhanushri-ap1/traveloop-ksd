@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traveloop — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cream:      #fdf8f3;
+  --cream2:     #f9f1e8;
+  --cream3:     #f2e8da;
+  --coral:      #f07857;
+  --coral2:     #e85d38;
+  --coral-lt:   #fce8e0;
+  --peach:      #f4a882;
+  --blush:      #f5c3b0;
+  --terracotta: #c9633a;
+  --amber:      #f5a623;
+  --amber-lt:   #fef3dc;
+  --sage:       #7dab8a;
+  --sage-lt:    #e4f0e8;
+  --sky:        #6aafe6;
+  --sky-lt:     #deeef9;
+  --lavender:   #a888d4;
+  --lav-lt:     #ede3f7;
+  --ink:        #2c1f14;
+  --ink2:       #4a3728;
+  --muted:      #9b8579;
+  --muted2:     #c4a99a;
+  --border:     rgba(240,120,87,0.15);
+  --border2:    rgba(240,120,87,0.3);
+  --shadow:     rgba(44,31,20,0.08);
+  --shadow2:    rgba(44,31,20,0.15);
+  --playfair:   'Playfair Display', Georgia, serif;
+  --dm:         'DM Sans', sans-serif;
+  --mono:       'DM Mono', monospace;
+  --sidebar:    260px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--dm);
+  overflow: hidden;
+}
+
+/* ── Organic background blobs ── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.35;
+}
+.blob-1 { width: 600px; height: 600px; background: radial-gradient(circle, #f4a882 0%, transparent 70%); top: -200px; right: -100px; }
+.blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, #fce8e0 0%, transparent 70%); bottom: 100px; left: -100px; }
+.blob-3 { width: 300px; height: 300px; background: radial-gradient(circle, #e4f0e8 0%, transparent 70%); top: 40%; left: 40%; }
+.blob-4 { width: 250px; height: 250px; background: radial-gradient(circle, #deeef9 0%, transparent 70%); bottom: -50px; right: 200px; }
+
+/* ── Shell ── */
+.shell { position: relative; z-index: 1; display: flex; height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar);
+  flex-shrink: 0;
+  height: 100vh;
+  background: rgba(253,248,243,0.85);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: relative;
+  box-shadow: 4px 0 24px var(--shadow);
+}
+
+.sb-logo {
+  padding: 28px 24px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.sb-logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(240,120,87,0.35);
+}
+.sb-logo-text {
+  font-family: var(--playfair);
+  font-size: 22px; font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.sb-logo-text span { color: var(--coral); }
+
+.sb-user {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.sb-avatar {
+  width: 40px; height: 40px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--coral), var(--amber));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: white;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(240,120,87,0.3);
+}
+.sb-uname { font-size: 14px; font-weight: 600; color: var(--ink); }
+.sb-urole { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.06em; margin-top: 1px; }
+
+.sb-nav { flex: 1; padding: 16px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.sb-nav::-webkit-scrollbar { display: none; }
+
+.sb-section {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted2); padding: 12px 10px 6px;
+}
+
+.sb-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13.5px; font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.sb-link:hover { color: var(--ink); background: var(--coral-lt); border-color: var(--border); }
+.sb-link.active {
+  color: white;
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(240,120,87,0.3);
+}
+.sb-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.sb-badge {
+  margin-left: auto;
+  background: var(--coral); color: white;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  padding: 2px 8px; border-radius: 100px;
+}
+.sb-link.active .sb-badge { background: rgba(255,255,255,0.3); color: white; }
+
+.sb-bottom {
+  padding: 14px;
+  border-top: 1px solid var(--border);
+}
+.sb-logout {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 12px;
+  font-size: 13.5px; font-weight: 500; color: var(--muted);
+  cursor: pointer; transition: all 0.2s;
+}
+.sb-logout:hover { color: var(--coral2); background: var(--coral-lt); }
+
+/* ── Main ── */
+.main { flex: 1; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+.main::-webkit-scrollbar { width: 5px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: var(--blush); border-radius: 4px; }
+
+/* ── Topbar ── */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(253,248,243,0.8);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; flex-direction: column; gap: 2px; }
+.topbar-eyebrow {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--coral);
+}
+.topbar-title { font-family: var(--playfair); font-size: 22px; font-style: italic; color: var(--ink); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.tb-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: 12px;
+  font-family: var(--dm); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.2s;
+}
+.tb-btn.primary {
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  color: white;
+  box-shadow: 0 4px 20px rgba(240,120,87,0.35);
+}
+.tb-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(240,120,87,0.45); }
+.tb-btn.ghost {
+  background: white; border: 1.5px solid var(--border2); color: var(--ink2);
+}
+.tb-btn.ghost:hover { border-color: var(--coral); color: var(--coral); }
+
+/* ── Notification dot ── */
+.notif-btn {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: white; border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; transition: all 0.2s;
+  font-size: 16px;
+}
+.notif-btn:hover { border-color: var(--coral); }
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--coral);
+  border: 1.5px solid var(--cream);
+}
+
+/* ── Page ── */
+.page { padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 26px; }
+
+/* ── Hero greeting banner ── */
+.hero-banner {
+  background: linear-gradient(135deg, var(--coral) 0%, var(--peach) 50%, var(--amber) 100%);
+  border-radius: 22px;
+  padding: 28px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 40px rgba(240,120,87,0.25);
+  animation: fadeUp 0.5s ease both;
+}
+.hero-banner::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 250px; height: 250px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+.hero-banner::after {
+  content: '';
+  position: absolute; bottom: -60px; right: 80px;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 50%;
+}
+.hero-text { position: relative; z-index: 1; }
+.hero-sub { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.75); margin-bottom: 6px; }
+.hero-h1 { font-family: var(--playfair); font-size: 30px; font-weight: 700; color: white; line-height: 1.2; }
+.hero-h1 em { font-style: italic; }
+.hero-cta { display: flex; gap: 10px; margin-top: 16px; }
+.hero-btn {
+  padding: 9px 20px; border-radius: 10px;
+  font-family: var(--dm); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.2s;
+}
+.hero-btn.white { background: white; color: var(--coral2); }
+.hero-btn.white:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.hero-btn.outline { background: rgba(255,255,255,0.2); color: white; border: 1.5px solid rgba(255,255,255,0.4); }
+.hero-btn.outline:hover { background: rgba(255,255,255,0.3); }
+.hero-visual { position: relative; z-index: 1; font-size: 72px; line-height: 1; opacity: 0.9; animation: float 4s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-10px) rotate(5deg)} }
+
+/* ── Stats row ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+.stat-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px 22px;
+  position: relative; overflow: hidden;
+  transition: all 0.25s;
+  animation: fadeUp 0.4s ease both;
+  box-shadow: 0 2px 16px var(--shadow);
+  cursor: pointer;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px var(--shadow2); }
+.stat-card-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--s-color, linear-gradient(90deg, var(--coral), var(--peach)));
+  border-radius: 18px 18px 0 0;
+}
+.stat-icon-wrap {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: var(--s-bg, var(--coral-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 14px;
+}
+.stat-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.stat-value { font-family: var(--playfair); font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1; }
+.stat-trend { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.stat-trend .up { color: var(--sage); font-weight: 600; }
+.stat-trend .down { color: var(--coral); font-weight: 600; }
+
+/* ── Grid layouts ── */
+.grid-main { display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px; }
+
+/* ── Panel card ── */
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px var(--shadow);
+  animation: fadeUp 0.5s ease both;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-title {
+  font-family: var(--playfair); font-size: 16px; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-action {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--coral); cursor: pointer; background: none; border: none;
+  padding: 5px 12px; border-radius: 8px; transition: all 0.2s;
+}
+.panel-action:hover { background: var(--coral-lt); }
+.panel-body { padding: 18px 22px; }
+
+/* ── Trip cards ── */
+.trip-list { display: flex; flex-direction: column; gap: 10px; }
+.trip-item {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.trip-item:hover { border-color: var(--coral); background: var(--coral-lt); transform: translateX(4px); }
+.trip-left-bar {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--ti-color, var(--coral));
+  border-radius: 4px 0 0 4px;
+}
+.trip-emoji { font-size: 30px; }
+.trip-info { flex: 1; min-width: 0; }
+.trip-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.trip-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.trip-actions { display: flex; gap: 6px; margin-top: 7px; }
+.trip-btn {
+  font-family: var(--dm); font-size: 11px; padding: 3px 10px; border-radius: 7px;
+  border: 1.5px solid var(--border2); background: white; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.trip-btn:hover { color: var(--coral); border-color: var(--coral); }
+.trip-btn.del:hover { color: #e05252; border-color: #e05252; }
+.trip-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.trip-budget { font-family: var(--playfair); font-size: 15px; font-weight: 700; color: var(--coral); }
+.trip-status {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px;
+}
+.ts-upcoming { background: var(--sage-lt); color: var(--sage); border: 1px solid rgba(125,171,138,0.3); }
+.ts-planning  { background: var(--lav-lt); color: var(--lavender); border: 1px solid rgba(168,136,212,0.3); }
+.ts-completed { background: var(--sky-lt); color: var(--sky); border: 1px solid rgba(106,175,230,0.3); }
+
+/* ── Budget panel ── */
+.budget-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.bcard {
+  text-align: center; padding: 14px 10px;
+  background: var(--cream); border: 1px solid var(--border); border-radius: 12px;
+}
+.bcard-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.bcard-val { font-family: var(--playfair); font-size: 20px; font-weight: 700; }
+.bcard-val.total  { color: var(--ink); }
+.bcard-val.saved  { color: var(--amber); }
+.bcard-val.needed { color: var(--sage); }
+
+.progress-block { margin-bottom: 14px; }
+.progress-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 7px; }
+.progress-track { height: 10px; background: var(--cream3); border-radius: 100px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 100px;
+  background: linear-gradient(90deg, var(--coral), var(--amber));
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 8px rgba(245,166,35,0.6);
+}
+
+.expense-list { display: flex; flex-direction: column; gap: 8px; }
+.expense-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  background: var(--cream); border-radius: 10px;
+}
+.exp-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.exp-name { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--ink2); }
+.exp-bar-wrap { width: 70px; height: 5px; background: var(--cream3); border-radius: 100px; overflow: hidden; }
+.exp-bar-fill { height: 100%; border-radius: 100px; }
+.exp-amt { font-family: var(--mono); font-size: 11px; font-weight: 500; min-width: 58px; text-align: right; }
+
+/* ── Destinations ── */
+.dest-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.dest-card {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px;
+  position: relative; overflow: hidden;
+}
+.dest-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--coral-lt), transparent);
+  opacity: 0; transition: opacity 0.2s;
+}
+.dest-card:hover { border-color: var(--coral); transform: translateY(-3px); box-shadow: 0 6px 20px var(--shadow2); }
+.dest-card:hover::before { opacity: 1; }
+.dest-flag { font-size: 28px; position: relative; z-index: 1; }
+.dest-name { font-size: 13px; font-weight: 600; color: var(--ink); position: relative; z-index: 1; }
+.dest-country { font-family: var(--mono); font-size: 9px; color: var(--muted); position: relative; z-index: 1; }
+.dest-price { font-family: var(--mono); font-size: 10px; color: var(--coral); font-weight: 500; margin-top: 2px; position: relative; z-index: 1; }
+
+/* ── Timeline ── */
+.timeline { display: flex; flex-direction: column; }
+.tl-row {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tl-row:last-child { border-bottom: none; }
+.tl-spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 5px; }
+.tl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); flex-shrink: 0; border: 2px solid white; box-shadow: 0 0 0 2px var(--coral); }
+.tl-line { width: 1px; flex: 1; background: var(--border); margin-top: 5px; }
+.tl-row:last-child .tl-line { display: none; }
+.tl-body { flex: 1; padding-bottom: 6px; }
+.tl-text { font-size: 12.5px; font-weight: 500; color: var(--ink2); line-height: 1.4; }
+.tl-text em { color: var(--coral); font-style: normal; font-weight: 600; }
+.tl-when { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+
+/* ── Packing ── */
+.pack-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pack-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.pack-pct { font-family: var(--mono); font-size: 12px; color: var(--coral); font-weight: 500; }
+.pack-bar { height: 7px; background: var(--cream3); border-radius: 100px; overflow: hidden; margin-bottom: 14px; }
+.pack-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--sage), var(--sky)); transition: width 1s ease; }
+.pack-items { display: flex; flex-direction: column; gap: 6px; }
+.pack-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px; border-radius: 10px; cursor: pointer; transition: background 0.15s;
+}
+.pack-row:hover { background: var(--cream); }
+.pack-check {
+  width: 18px; height: 18px; border-radius: 6px;
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 10px;
+  transition: all 0.15s;
+}
+.pack-row.done .pack-check { background: var(--sage); border-color: var(--sage); color: white; }
+.pack-row.done .pack-label { text-decoration: line-through; color: var(--muted2); }
+.pack-label { font-size: 12.5px; color: var(--ink2); }
+
+/* ── Weather widget ── */
+.weather-widget {
+  background: linear-gradient(135deg, var(--sky-lt), white);
+  border: 1px solid rgba(106,175,230,0.3);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.weather-big { font-size: 42px; }
+.weather-info { flex: 1; }
+.weather-city { font-size: 12px; font-weight: 600; color: var(--ink); }
+.weather-temp { font-family: var(--playfair); font-size: 30px; font-weight: 700; color: var(--sky); line-height: 1.1; }
+.weather-desc { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+.weather-pills { display: flex; gap: 6px; margin-top: 8px; }
+.wpill { font-family: var(--mono); font-size: 9.5px; color: var(--muted); background: var(--cream2); padding: 3px 8px; border-radius: 6px; }
+
+/* ── AI card ── */
+.ai-card {
+  background: linear-gradient(135deg, rgba(240,120,87,0.06), rgba(245,166,35,0.04));
+  border: 1.5px solid rgba(240,120,87,0.25);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex; gap: 12px;
+}
+.ai-icon { font-size: 24px; flex-shrink: 0; }
+.ai-body { flex: 1; }
+.ai-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); margin-bottom: 5px; font-weight: 500; }
+.ai-text { font-size: 12.5px; line-height: 1.6; color: var(--ink2); }
+.ai-text strong { color: var(--ink); font-weight: 600; }
+.ai-link { font-family: var(--mono); font-size: 10px; color: var(--coral); cursor: pointer; margin-top: 7px; display: inline-block; font-weight: 500; }
+.ai-link:hover { text-decoration: underline; }
+
+/* ── Quick Insights ── */
+.insights-row-slim { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+/* ── Destinations wide ── */
+.dest-grid-wide { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.insight-card {
+  padding: 16px 18px; border-radius: 16px;
+  border: 1px solid var(--border);
+  display: flex; gap: 12px; align-items: flex-start;
+  background: white;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.insight-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--shadow2); }
+.ins-icon { font-size: 28px; flex-shrink: 0; }
+.ins-body { flex: 1; }
+.ins-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.ins-val { font-family: var(--playfair); font-size: 20px; font-weight: 700; color: var(--ink); }
+.ins-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(44,31,20,0.4);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 30px 34px;
+  width: 480px; max-width: 95vw;
+  box-shadow: 0 24px 60px rgba(44,31,20,0.2);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s;
+}
+.modal-overlay.open .modal { transform: none; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-title { font-family: var(--playfair); font-size: 22px; font-weight: 700; color: var(--ink); }
+.modal-close { background: var(--cream); border: none; width: 32px; height: 32px; border-radius: 9px; font-size: 18px; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+.modal-close:hover { background: var(--coral-lt); color: var(--coral); }
+.form { display: flex; flex-direction: column; gap: 16px; }
+.form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.fg input {
+  background: var(--cream); border: 1.5px solid var(--border);
+  border-radius: 11px; padding: 10px 14px;
+  color: var(--ink); font-family: var(--dm); font-size: 13.5px;
+  outline: none; transition: border-color 0.2s; width: 100%;
+}
+.fg input:focus { border-color: var(--coral); background: white; }
+.fg input::placeholder { color: var(--muted2); }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 26px; right: 26px; z-index: 999;
+  background: var(--ink); color: white;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em;
+  padding: 12px 20px; border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(44,31,20,0.25);
+  opacity: 0; transform: translateY(10px);
+  transition: all 0.22s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: none; }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 30px 20px; color: var(--muted); font-size: 13px; }
+.empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.45; }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+.panel { animation-delay: 0.1s; }
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+
+<div class="shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">✈</div>
+      <div class="sb-logo-text">Travel<span>oop</span></div>
+    </div>
+
+    <div class="sb-user">
+      <div class="sb-avatar" id="sbAvatar">K</div>
+      <div>
+        <div class="sb-uname" id="sbName">Traveller</div>
+        <div class="sb-urole">Explorer · Free Plan</div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-section">Explore</div>
+      <a class="sb-link active" href="dashboard.html">
+        <span class="sb-icon">⊞</span> Dashboard
+      </a>
+      <a class="sb-link" href="homepage.html">
+        <span class="sb-icon">🏠</span> Home
+      </a>
+      <a class="sb-link" href="mapping3.html">
+        <span class="sb-icon">🗺</span> Map
+      </a>
+      <a class="sb-link" href="todolist.html">
+        <span class="sb-icon">📋</span> Itinerary
+        <span class="sb-badge" id="sbTripCount">0</span>
+      </a>
+      <a class="sb-link" href="todolist.html">
+        <span class="sb-icon">💰</span> Budget
+      </a>
+      <a class="sb-link" href="scrapbook.html">
+        <span class="sb-icon">📸</span> Snaps
+      </a>
+      <div class="sb-section">Intelligence</div>
+      <a class="sb-link" href="pr.html">
+        <span class="sb-icon">✨</span> AI Guide
+      </a>
+      <a class="sb-link" href="#">
+        <span class="sb-icon">📊</span> Analytics
+      </a>
+      <div class="sb-section">Account</div>
+      <a class="sb-link" href="login.html">
+        <span class="sb-icon">👤</span> Profile
+      </a>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-logout" onclick="logout()">
+        <span class="sb-icon">🚪</span> Logout
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-eyebrow" id="greetLabel">Good morning</div>
+        <div class="topbar-title" id="greetTitle">Where to next, Traveller?</div>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn"><span>🔔</span><div class="notif-dot"></div></div>
+        <button class="tb-btn ghost" onclick="window.location.href='mapping3.html'">🗺 View Map</button>
+        <button class="tb-btn primary" onclick="openModal()">✈ New Trip</button>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- Hero Banner -->
+      <div class="hero-banner" style="animation-delay:0s">
+        <div class="hero-text">
+          <div class="hero-sub">Your journey dashboard</div>
+          <div class="hero-h1">Plan trips.<br><em>Explore freely.</em></div>
+          <div class="hero-cta">
+            <button class="hero-btn white" onclick="openModal()">+ New Trip</button>
+            <button class="hero-btn outline" onclick="window.location.href='pr.html'">Ask AI Guide</button>
+          </div>
+        </div>
+        <div class="hero-visual">🌍</div>
+      </div>
+
+      <!-- Quick Insights -->
+      <div class="insights-row-slim">
+        <div class="insight-card" onclick="window.location.href='todolist.html'">
+          <div class="ins-icon">📅</div>
+          <div class="ins-body">
+            <div class="ins-label">Next Departure</div>
+            <div class="ins-val" id="insNextDep">—</div>
+            <div class="ins-sub" id="insNextName">No upcoming trips</div>
+          </div>
+        </div>
+        <div class="insight-card" onclick="window.location.href='todolist.html'">
+          <div class="ins-icon">✈️</div>
+          <div class="ins-body">
+            <div class="ins-label">Active Trips</div>
+            <div class="ins-val" id="insActiveTrips">0</div>
+            <div class="ins-sub">upcoming or in progress</div>
+          </div>
+        </div>
+        <div class="insight-card" onclick="window.location.href='todolist.html'">
+          <div class="ins-icon">💸</div>
+          <div class="ins-body">
+            <div class="ins-label">Avg Trip Budget</div>
+            <div class="ins-val" id="insAvgBudget">₹0</div>
+            <div class="ins-sub">per trip planned</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card" style="--s-color:linear-gradient(90deg,var(--coral),var(--peach));--s-bg:var(--coral-lt)">
+          <div class="stat-card-accent"></div>
+          <div class="stat-icon-wrap">✈️</div>
+          <div class="stat-label">Total Trips</div>
+          <div class="stat-value" id="statTrips">0</div>
+          <div class="stat-trend"><span class="up">↑</span> planned this month</div>
+        </div>
+        <div class="stat-card" style="--s-color:linear-gradient(90deg,var(--lavender),#c4a0ea);--s-bg:var(--lav-lt)">
+          <div class="stat-card-accent"></div>
+          <div class="stat-icon-wrap">📍</div>
+          <div class="stat-label">Destinations</div>
+          <div class="stat-value" id="statCities">0</div>
+          <div class="stat-trend">cities on your map</div>
+        </div>
+        <div class="stat-card" style="--s-color:linear-gradient(90deg,var(--amber),#f9c459);--s-bg:var(--amber-lt)">
+          <div class="stat-card-accent"></div>
+          <div class="stat-icon-wrap">💰</div>
+          <div class="stat-label">Total Budget</div>
+          <div class="stat-value" id="statBudget">₹0</div>
+          <div class="stat-trend">allocated across trips</div>
+        </div>
+        <div class="stat-card" style="--s-color:linear-gradient(90deg,var(--sage),#9ecaab);--s-bg:var(--sage-lt)">
+          <div class="stat-card-accent"></div>
+          <div class="stat-icon-wrap">📝</div>
+          <div class="stat-label">Activities</div>
+          <div class="stat-value" id="statActivities">0</div>
+          <div class="stat-trend">in your wishlist</div>
+        </div>
+      </div>
+
+      <!-- Main grid: Trips + Budget -->
+      <div class="grid-main">
+
+        <!-- Trips -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🗺 Upcoming Trips</div>
+            <button class="panel-action" onclick="window.location.href='todolist.html'">View All →</button>
+          </div>
+          <div class="panel-body">
+            <div class="trip-list" id="tripsContainer">
+              <div class="empty"><div class="empty-icon">✈</div>No trips yet — click <strong>✈ New Trip</strong> above!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">💰 Budget Overview</div>
+            <button class="panel-action" onclick="window.location.href='todolist.html'">Manage →</button>
+          </div>
+          <div class="panel-body">
+            <div class="budget-summary">
+              <div class="bcard">
+                <div class="bcard-label">Total</div>
+                <div class="bcard-val total" id="bTotal">₹0</div>
+              </div>
+              <div class="bcard">
+                <div class="bcard-label">Saved</div>
+                <div class="bcard-val saved" id="bSaved">₹0</div>
+              </div>
+              <div class="bcard">
+                <div class="bcard-label">Needed</div>
+                <div class="bcard-val needed" id="bNeeded">₹0</div>
+              </div>
+            </div>
+            <div class="progress-block">
+              <div class="progress-label">
+                <span>Savings Progress</span>
+                <span id="bPct">0%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="bBar" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="expense-list">
+              <div class="expense-row">
+                <div class="exp-swatch" style="background:var(--coral)"></div>
+                <div class="exp-name">Flights</div>
+                <div class="exp-bar-wrap"><div class="exp-bar-fill" style="width:65%;background:var(--coral)"></div></div>
+                <div class="exp-amt" style="color:var(--coral)">₹18,000</div>
+              </div>
+              <div class="expense-row">
+                <div class="exp-swatch" style="background:var(--lavender)"></div>
+                <div class="exp-name">Hotels</div>
+                <div class="exp-bar-wrap"><div class="exp-bar-fill" style="width:50%;background:var(--lavender)"></div></div>
+                <div class="exp-amt" style="color:var(--lavender)">₹15,000</div>
+              </div>
+              <div class="expense-row">
+                <div class="exp-swatch" style="background:var(--amber)"></div>
+                <div class="exp-name">Food & Fun</div>
+                <div class="exp-bar-wrap"><div class="exp-bar-fill" style="width:38%;background:var(--amber)"></div></div>
+                <div class="exp-amt" style="color:var(--amber)">₹10,000</div>
+              </div>
+              <div class="expense-row">
+                <div class="exp-swatch" style="background:var(--sage)"></div>
+                <div class="exp-name">Transport</div>
+                <div class="exp-bar-wrap"><div class="exp-bar-fill" style="width:30%;background:var(--sage)"></div></div>
+                <div class="exp-amt" style="color:var(--sage)">₹8,800</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Destinations full width -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">🌍 Popular Destinations</div>
+          <button class="panel-action" onclick="window.location.href='mapping3.html'">Explore →</button>
+        </div>
+        <div class="panel-body">
+          <div class="dest-grid-wide" id="destGrid"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✈ New Trip</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form">
+      <div class="fg">
+        <label>Trip Name</label>
+        <input id="mName" placeholder="e.g. Tokyo Sakura Trip" />
+      </div>
+      <div class="form-row2">
+        <div class="fg">
+          <label>Destination</label>
+          <input id="mDest" placeholder="e.g. Tokyo, Japan" />
+        </div>
+        <div class="fg">
+          <label>Budget (₹)</label>
+          <input id="mBudget" type="number" placeholder="45000" />
+        </div>
+      </div>
+      <div class="form-row2">
+        <div class="fg">
+          <label>Start Date</label>
+          <input id="mStart" type="date" />
+        </div>
+        <div class="fg">
+          <label>End Date</label>
+          <input id="mEnd" type="date" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="tb-btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="tb-btn primary" onclick="saveTrip()">Create Trip →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } };
+const set = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+window.addEventListener('DOMContentLoaded', () => {
+  initUser();
+  loadStats();
+  loadTrips();
+  loadBudget();
+  loadDestinations();
+  loadInsights();
+  setTimeout(animateBars, 350);
+});
+
+function initUser() {
+  const users = get('users') || {};
+  const keys = Object.keys(users);
+  const stored = localStorage.getItem('currentUser') || (keys.length ? keys[keys.length-1] : 'Traveller');
+  const name = stored.charAt(0).toUpperCase() + stored.slice(1);
+  localStorage.setItem('currentUser', stored);
+  document.getElementById('sbName').textContent = name;
+  document.getElementById('sbAvatar').textContent = name.charAt(0).toUpperCase();
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greetLabel').textContent = g;
+  document.getElementById('greetTitle').textContent = `Where to next, ${name}?`;
+}
+
+function loadStats() {
+  const trips = get('traveloop_trips') || [];
+  const wishlist = get('wishlist') || [];
+  const budget = parseFloat(localStorage.getItem('budget')) || 0;
+  document.getElementById('statTrips').textContent = trips.length;
+  document.getElementById('statCities').textContent = trips.filter(t => t.dest).length;
+  document.getElementById('statBudget').textContent = budget ? `₹${budget.toLocaleString('en-IN')}` : '₹0';
+  document.getElementById('statActivities').textContent = wishlist.length;
+  document.getElementById('sbTripCount').textContent = trips.length;
+}
+
+function loadInsights() {
+  const trips = get('traveloop_trips') || [];
+  const now = new Date();
+
+  const upcoming = trips.filter(t => t.start && new Date(t.start) > now).sort((a,b) => new Date(a.start)-new Date(b.start));
+  if (upcoming.length) {
+    const diff = Math.round((new Date(upcoming[0].start) - now) / 86400000);
+    document.getElementById('insNextDep').textContent = diff <= 0 ? 'Today!' : `${diff}d`;
+    document.getElementById('insNextName').textContent = upcoming[0].name || 'Unnamed trip';
+  }
+
+  const active = trips.filter(t => t.start && new Date(t.start) > now).length;
+  document.getElementById('insActiveTrips').textContent = active;
+
+  const withBudget = trips.filter(t => t.budget && parseFloat(t.budget) > 0);
+  const avg = withBudget.length ? Math.round(withBudget.reduce((s,t) => s + parseFloat(t.budget), 0) / withBudget.length) : 0;
+  document.getElementById('insAvgBudget').textContent = avg ? `₹${avg.toLocaleString('en-IN')}` : '₹0';
+}
+
+const COLORS = ['coral','lavender','amber','sage'];
+const EMOJIS = ['✈️','🗺️','🏖️','🏔️','🌴','🌏','🗼','🏯'];
+const COLOR_MAP = { coral: 'var(--coral)', lavender: 'var(--lavender)', amber: 'var(--amber)', sage: 'var(--sage)' };
+
+function loadTrips() {
+  const trips = get('traveloop_trips') || [];
+  const container = document.getElementById('tripsContainer');
+  if (!trips.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">✈</div>No trips yet — click <strong>✈ New Trip</strong> to start!</div>`;
+    return;
+  }
+  container.innerHTML = trips.map((t, i) => {
+    const c = COLORS[i % COLORS.length];
+    const emoji = EMOJIS[i % EMOJIS.length];
+    const fmt = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : '—';
+    const now = new Date();
+    const sd = t.start ? new Date(t.start) : null;
+    const status = !sd ? 'planning' : sd > now ? 'upcoming' : 'completed';
+    const statusClass = { upcoming:'ts-upcoming', planning:'ts-planning', completed:'ts-completed' }[status];
+    const bud = t.budget ? `₹${parseFloat(t.budget).toLocaleString('en-IN')}` : '—';
+    return `
+    <div class="trip-item" style="--ti-color:${COLOR_MAP[c]}">
+      <div class="trip-left-bar"></div>
+      <div class="trip-emoji">${emoji}</div>
+      <div class="trip-info">
+        <div class="trip-name">${t.name || 'Unnamed Trip'}</div>
+        <div class="trip-meta">
+          <span>📍 ${t.dest || 'No destination'}</span>
+          <span>📅 ${fmt(t.start)} – ${fmt(t.end)}</span>
+        </div>
+        <div class="trip-actions">
+          <button class="trip-btn" onclick="window.location.href='todolist.html'">View</button>
+          <button class="trip-btn" onclick="editTrip(${i})">Edit</button>
+          <button class="trip-btn del" onclick="deleteTrip(${i})">Delete</button>
+        </div>
+      </div>
+      <div class="trip-right">
+        <div class="trip-budget">${bud}</div>
+        <div class="trip-status ${statusClass}">${status}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteTrip(i) {
+  const trips = get('traveloop_trips') || [];
+  trips.splice(i, 1);
+  set('traveloop_trips', trips);
+  loadTrips(); loadStats(); loadInsights();
+  toast('🗑 Trip deleted');
+}
+
+function editTrip(i) {
+  const trips = get('traveloop_trips') || [];
+  const t = trips[i];
+  document.getElementById('mName').value = t.name || '';
+  document.getElementById('mDest').value = t.dest || '';
+  document.getElementById('mBudget').value = t.budget || '';
+  document.getElementById('mStart').value = t.start || '';
+  document.getElementById('mEnd').value = t.end || '';
+  trips.splice(i, 1);
+  set('traveloop_trips', trips);
+  openModal();
+}
+
+function loadBudget() {
+  const budget  = parseFloat(localStorage.getItem('budget'))  || 0;
+  const savings = parseFloat(localStorage.getItem('savings')) || 0;
+  const needed  = Math.max(budget - savings, 0);
+  const pct     = budget > 0 ? Math.min(Math.round((savings / budget) * 100), 100) : 0;
+  const fmt = v => `₹${v.toLocaleString('en-IN')}`;
+  document.getElementById('bTotal').textContent  = fmt(budget);
+  document.getElementById('bSaved').textContent  = fmt(savings);
+  document.getElementById('bNeeded').textContent = fmt(needed);
+  document.getElementById('bPct').textContent    = pct + '%';
+  document.getElementById('bBar').style.width    = pct + '%';
+}
+
+const DESTS = [
+  { flag:'🇯🇵', city:'Tokyo',     country:'Japan',       cost:'₹60k+' },
+  { flag:'🇫🇷', city:'Paris',     country:'France',      cost:'₹80k+' },
+  { flag:'🇮🇩', city:'Bali',      country:'Indonesia',   cost:'₹35k+' },
+  { flag:'🇦🇪', city:'Dubai',     country:'UAE',         cost:'₹50k+' },
+  { flag:'🇮🇳', city:'Manali',    country:'India',       cost:'₹12k+' },
+  { flag:'🇸🇬', city:'Singapore', country:'Singapore',   cost:'₹45k+' },
+];
+
+function loadDestinations() {
+  document.getElementById('destGrid').innerHTML = DESTS.map(d => `
+    <div class="dest-card" onclick="quickTrip('${d.city}')">
+      <div class="dest-flag">${d.flag}</div>
+      <div class="dest-name">${d.city}</div>
+      <div class="dest-country">${d.country}</div>
+      <div class="dest-price">${d.cost}</div>
+    </div>`).join('');
+}
+
+function quickTrip(city) {
+  document.getElementById('mDest').value = city;
+  openModal();
+  toast(`📍 ${city} pre-filled!`);
+}
+
+function animateBars() {
+  const budget  = parseFloat(localStorage.getItem('budget'))  || 0;
+  const savings = parseFloat(localStorage.getItem('savings')) || 0;
+  const pct = budget > 0 ? Math.min(Math.round((savings / budget) * 100), 100) : 0;
+  document.getElementById('bBar').style.width = pct + '%';
+}
+
+function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function saveTrip() {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) { toast('Please enter a trip name'); return; }
+  const trips = get('traveloop_trips') || [];
+  trips.unshift({
+    name,
+    dest:   document.getElementById('mDest').value.trim(),
+    budget: document.getElementById('mBudget').value.trim(),
+    start:  document.getElementById('mStart').value,
+    end:    document.getElementById('mEnd').value,
+    created: new Date().toISOString()
+  });
+  set('traveloop_trips', trips);
+  closeModal();
+  ['mName','mDest','mBudget','mStart','mEnd'].forEach(id => document.getElementById(id).value = '');
+  loadTrips(); loadStats(); loadInsights();
+  toast('✈ Trip created!');
+}
+
+function logout() { localStorage.removeItem('currentUser'); window.location.href = 'login.html'; }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
