@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Itineraries & Budgets</title>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 100px 20px 40px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .card h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: var(--primary-cyan);
+    }
+
+    .input-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .input-group input {
+      flex: 1;
+    }
+
+    .input-group button {
+      padding: 0 20px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      padding: 12px 15px;
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 12px;
+      transition: background 0.3s ease;
+    }
+
+    li:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    li span {
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    li button {
+      background: none;
+      border: none;
+      color: #ff4d4d;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    
+    li button:hover {
+      transform: scale(1.2);
+    }
+
+    .result {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .completed span {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .page-title {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .plane {
+      position: absolute;
+      width: 150px;
+      height: auto;
+      bottom: -100px;
+      left: -100px;
+      transform: rotate(20deg);
+      z-index: -1;
+      opacity: 0.5;
+      animation: fly-diagonal 8s linear infinite;
+    }
+
+    @keyframes fly-diagonal {
+      0% { left: -100px; bottom: -100px; transform: rotate(20deg); }
+      50% { transform: rotate(10deg); }
+      100% { left: 100vw; bottom: 100vh; transform: rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <img src="./airplane-mode .png" class="plane">
+
+  <nav class="navbar animate-up">
+    <div class="nav-logo">
+      <a href="homepage.html">Traveloop</a>
+    </div>
+    <div class="nav-links">
+      <a href="homepage.html" class="nav-item">Home</a>
+      <a href="mapping3.html" class="nav-item">Map</a>
+      <a href="todolist.html" class="nav-item" style="color: var(--primary-cyan);">To-Do list</a>
+      <a href="pr.html" class="nav-item">Chat Bot</a>
+      <a href="scrapbook.html" class="nav-item">Snaps</a>
+    </div>
+  </nav>
+
+  <h1 class="page-title text-gradient animate-up delay-1">Multi-City Itineraries & Budgets</h1>
+  
+  <div class="container">
+    <div class="card glass-card animate-up delay-2">
+      <h2>📝 Activities & Dates</h2>
+      <div class="input-group">
+        <input type="text" id="place-input" class="input-glass" placeholder="Add a place...">
+        <button class="btn-gradient" onclick="addPlace()">➕</button>
+      </div>
+      <ul id="wishlist"></ul>
+    </div>
+
+    <div class="card glass-card animate-up delay-3">
+      <h2>📍 Multi-City Search</h2>
+      <div class="input-group">
+        <input type="text" id="next-destination-input" class="input-glass" placeholder="Where to next?">
+        <button class="btn-gradient" onclick="setNextDestination()">🚀</button>
+      </div>
+      <p class="result text-gradient" id="next-destination-display">No destination set yet.</p>
+    </div>
+
+    <div class="card glass-card animate-up delay-1">
+      <h2>💰 Cost Breakdowns</h2>
+      <div class="input-group">
+        <input type="number" id="budget-input" class="input-glass" placeholder="Total Budget ($)" oninput="saveBudget()">
+      </div>
+      <div class="input-group">
+        <input type="number" id="savings-input" class="input-glass" placeholder="Current Savings ($)" oninput="saveBudget()">
+        <button class="btn-gradient" onclick="calculateBudget()">📊</button>
+      </div>
+      <p class="result text-gradient" id="budget-result">Enter details to see savings needed.</p>
+    </div>
+  </div>
+
+  <script>
+    let wishlist = document.getElementById("wishlist");
+  
+    window.onload = function () {
+      const savedItems = JSON.parse(localStorage.getItem("wishlist")) || [];
+      savedItems.forEach(item => addPlaceToList(item.name, item.completed));
+  
+      const savedDestination = localStorage.getItem("nextDestination");
+      if (savedDestination) {
+        document.getElementById("next-destination-display").textContent = `🌟 Next Stop: ${savedDestination}`;
+        document.getElementById("next-destination-input").value = savedDestination;
+      }
+  
+      document.getElementById("budget-input").value = localStorage.getItem("budget") || "";
+      document.getElementById("savings-input").value = localStorage.getItem("savings") || "";
+  
+      if (localStorage.getItem("budgetResult")) {
+        document.getElementById("budget-result").textContent = localStorage.getItem("budgetResult");
+      }
+    };
+  
+    function saveWishlist() {
+      const items = [];
+      wishlist.querySelectorAll("li").forEach(li => {
+        items.push({
+          name: li.querySelector("span").textContent,
+          completed: li.classList.contains("completed")
+        });
+      });
+      localStorage.setItem("wishlist", JSON.stringify(items));
+    }
+  
+    function addPlace() {
+      let input = document.getElementById("place-input");
+      let placeName = input.value.trim();
+      if (placeName === "") return;
+      addPlaceToList(placeName, false);
+      input.value = "";
+      saveWishlist();
+    }
+  
+    function addPlaceToList(name, completed) {
+      let li = document.createElement("li");
+      li.innerHTML = `<span>${name}</span> <button onclick="removePlace(this)">🗑</button>`;
+      if (completed) li.classList.add("completed");
+      li.querySelector("span").addEventListener("click", function () {
+        li.classList.toggle("completed");
+        saveWishlist();
+      });
+      wishlist.appendChild(li);
+    }
+  
+    function removePlace(button) {
+      button.parentElement.remove();
+      saveWishlist();
+    }
+  
+    function setNextDestination() {
+      let input = document.getElementById("next-destination-input").value.trim();
+      if (input === "") return;
+      document.getElementById("next-destination-display").textContent = `🌟 Next Stop: ${input}`;
+      localStorage.setItem("nextDestination", input);
+    }
+  
+    function saveBudget() {
+      localStorage.setItem("budget", document.getElementById("budget-input").value);
+      localStorage.setItem("savings", document.getElementById("savings-input").value);
+    }
+  
+    function calculateBudget() {
+      let budget = parseFloat(document.getElementById("budget-input").value) || 0;
+      let savings = parseFloat(document.getElementById("savings-input").value) || 0;
+      let remaining = budget - savings;
+      let result = remaining > 0
+        ? `You need to save $${remaining} more.`
+        : "You have enough savings! 🎉";
+      document.getElementById("budget-result").textContent = result;
+      localStorage.setItem("budgetResult", result);
+    }
+  </script>
+</body>
+</html>
