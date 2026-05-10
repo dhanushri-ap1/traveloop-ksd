@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Traveloop - Auth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange: #F97040;
+            --orange-light: #FB8C63;
+            --orange-dark: #E05A28;
+            --cream: #FAF7F2;
+            --card-bg: #FFFFFF;
+            --text-dark: #2D2D2D;
+            --text-muted: #9A9A9A;
+            --border: #EBEBEB;
+            --shadow: 0 8px 40px rgba(249,112,64,0.10), 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--cream);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── NAV ── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 48px;
+            background: var(--cream);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--orange);
+            letter-spacing: -0.5px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 36px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        nav ul li a:hover,
+        nav ul li a.active {
+            color: var(--orange);
+        }
+
+        /* ── MAIN ── */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative planes canvas */
+        #planes-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .plane {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        @keyframes floatA {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%     { transform: translateY(-18px) rotate(calc(var(--r) + 5deg)); }
+        }
+        @keyframes floatB {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%     { transform: translateY(14px) rotate(calc(var(--r) - 4deg)); }
+        }
+        @keyframes floatC {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            33%     { transform: translateY(-10px) rotate(calc(var(--r) + 3deg)); }
+            66%     { transform: translateY(8px) rotate(calc(var(--r) - 3deg)); }
+        }
+        @keyframes drift {
+            0%   { transform: translateX(0px) translateY(0px) rotate(var(--r)); }
+            50%  { transform: translateX(12px) translateY(-10px) rotate(calc(var(--r) + 4deg)); }
+            100% { transform: translateX(0px) translateY(0px) rotate(var(--r)); }
+        }
+
+        /* ── AUTH CARD ── */
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            width: 420px;
+            padding: 44px 40px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* orange accent stripe */
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--orange), var(--orange-light));
+            border-radius: 24px 24px 0 0;
+        }
+
+        /* ── TAB SWITCHER ── */
+        .tab-bar {
+            display: flex;
+            background: var(--cream);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 32px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 9px;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--orange);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(249,112,64,0.35);
+        }
+
+        /* ── PANELS WRAPPER ── */
+        .panels {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .panel.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateX(24px);
+            pointer-events: none;
+            position: absolute;
+            top: 0; left: 0; right: 0;
+        }
+
+        .panel.visible {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* animate-in class used via JS */
+        .panel.animate-in {
+            animation: slideIn 0.35s ease forwards;
+        }
+
+        .panel.animate-out {
+            animation: slideOut 0.35s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(28px); }
+            to   { opacity: 1; transform: translateX(0);    }
+        }
+
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0);    }
+            to   { opacity: 0; transform: translateX(-28px); }
+        }
+
+        /* ── HEADING ── */
+        .panel-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .panel-sub {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        /* ── INPUTS ── */
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            color: var(--text-dark);
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input::placeholder { color: #C8C8C8; }
+
+        input:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(249,112,64,0.12);
+        }
+
+        .name-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .name-row .field { flex: 1; }
+
+        /* ── FORGOT LINK ── */
+        .forgot {
+            text-align: right;
+            margin-top: -8px;
+            margin-bottom: 22px;
+        }
+
+        .forgot a {
+            font-size: 0.75rem;
+            color: var(--orange);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot a:hover { text-decoration: underline; }
+
+        /* ── SUBMIT BUTTON ── */
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, var(--orange), var(--orange-light));
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 18px rgba(249,112,64,0.38);
+            transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+            margin-top: 4px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(249,112,64,0.45);
+            filter: brightness(1.05);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(249,112,64,0.3);
+        }
+
+        /* ── DIVIDER ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 22px 0;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── BOTTOM TOGGLE ── */
+        .toggle-hint {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 18px;
+        }
+
+        .toggle-hint span {
+            color: var(--orange);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-hint span:hover { text-decoration: underline; }
+
+        /* ── TERMS ── */
+        .terms {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 14px;
+            line-height: 1.6;
+        }
+
+        .terms a { color: var(--orange); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+
+
+    <!-- MAIN -->
+    <main>
+        <!-- Decorative planes background -->
+        <div id="planes-canvas"></div>
+
+        <!-- AUTH CARD -->
+        <div class="auth-card">
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn active" id="tab-login" onclick="switchPanel('login')">Login</button>
+                <button class="tab-btn" id="tab-signup" onclick="switchPanel('signup')">Sign Up</button>
+            </div>
+
+            <!-- Panels -->
+            <div class="panels">
+
+                <!-- LOGIN PANEL -->
+                <div class="panel visible" id="panel-login">
+                    <p class="panel-title">Welcome back ✈️</p>
+                    <p class="panel-sub">Log in to continue planning your adventures.</p>
+
+                    <div class="field">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" placeholder="you@email.com">
+                    </div>
+                    <div class="field">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="••••••••">
+                    </div>
+                    <div class="forgot"><a href="#">Forgot password?</a></div>
+
+                    <button class="btn-submit" onclick="handleLogin()">Login</button>
+
+                    <p class="toggle-hint">
+                        Don't have an account? <span onclick="switchPanel('signup')">Sign Up</span>
+                    </p>
+                </div>
+
+                <!-- SIGNUP PANEL -->
+                <div class="panel hidden" id="panel-signup">
+                    <p class="panel-title">Join Traveloop 🌍</p>
+                    <p class="panel-sub">Create an account and start your next journey.</p>
+
+                    <div class="name-row">
+                        <div class="field">
+                            <label for="su-first">First Name</label>
+                            <input type="text" id="su-first" placeholder="Jane">
+                        </div>
+                        <div class="field">
+                            <label for="su-last">Last Name</label>
+                            <input type="text" id="su-last" placeholder="Doe">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="su-email">Email</label>
+                        <input type="email" id="su-email" placeholder="you@email.com">
+                    </div>
+                    <div class="field">
+                        <label for="su-password">Password</label>
+                        <input type="password" id="su-password" placeholder="••••••••">
+                    </div>
+
+                    <button class="btn-submit" onclick="handleSignup()">Create Account</button>
+
+                    <p class="terms">
+                        By signing up you agree to our <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a>.
+                    </p>
+
+                    <p class="toggle-hint">
+                        Already have an account? <span onclick="switchPanel('login')">Login</span>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /* ── PLANES BACKGROUND ── */
+        const PLANE_SVG = (color, opacity) => `
+          <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- body -->
+            <path d="M4 40 L76 16 L60 40 L76 64 L4 40Z" fill="${color}" opacity="${opacity}"/>
+            <!-- wing highlight -->
+            <path d="M24 34 L60 22 L52 40 L60 58 L24 46 L32 40 L24 34Z" fill="white" opacity="${opacity * 0.45}"/>
+            <!-- engine -->
+            <ellipse cx="44" cy="40" rx="6" ry="3.5" fill="${color}" opacity="${opacity * 0.7}"/>
+            <!-- tail fins -->
+            <path d="M4 40 L18 28 L22 40 L18 52 L4 40Z" fill="${color}" opacity="${opacity * 0.6}"/>
+          </svg>`;
+
+        const planes = [
+            // big, low opacity — background layer
+            { x: '4%',  y: '12%',  size: 110, r: '-15deg', anim: 'floatA', dur: 7,   color: '#F97040', op: 0.10 },
+            { x: '80%', y: '8%',   size: 90,  r: '20deg',  anim: 'floatB', dur: 9,   color: '#F97040', op: 0.09 },
+            { x: '88%', y: '65%',  size: 120, r: '-30deg', anim: 'floatC', dur: 11,  color: '#F97040', op: 0.08 },
+            { x: '2%',  y: '72%',  size: 100, r: '8deg',   anim: 'drift',  dur: 10,  color: '#F97040', op: 0.09 },
+            // medium
+            { x: '14%', y: '45%',  size: 64,  r: '-22deg', anim: 'floatB', dur: 8,   color: '#F97040', op: 0.13 },
+            { x: '70%', y: '40%',  size: 70,  r: '15deg',  anim: 'floatA', dur: 6.5, color: '#FB8C63', op: 0.12 },
+            { x: '55%', y: '78%',  size: 56,  r: '-10deg', anim: 'drift',  dur: 12,  color: '#F97040', op: 0.11 },
+            { x: '38%', y: '5%',   size: 60,  r: '25deg',  anim: 'floatC', dur: 9.5, color: '#F97040', op: 0.10 },
+            // small, slightly more visible
+            { x: '26%', y: '88%',  size: 38,  r: '-18deg', anim: 'floatA', dur: 7.5, color: '#F97040', op: 0.16 },
+            { x: '62%', y: '18%',  size: 42,  r: '30deg',  anim: 'floatB', dur: 8.5, color: '#FB8C63', op: 0.15 },
+            { x: '92%', y: '28%',  size: 34,  r: '-5deg',  anim: 'floatC', dur: 10,  color: '#F97040', op: 0.14 },
+            { x: '7%',  y: '30%',  size: 36,  r: '12deg',  anim: 'drift',  dur: 13,  color: '#F97040', op: 0.13 },
+            // tiny accent dots
+            { x: '47%', y: '55%',  size: 24,  r: '-35deg', anim: 'floatA', dur: 6,   color: '#F97040', op: 0.18 },
+            { x: '75%', y: '82%',  size: 28,  r: '22deg',  anim: 'floatB', dur: 7,   color: '#FB8C63', op: 0.17 },
+            { x: '33%', y: '22%',  size: 22,  r: '-8deg',  anim: 'floatC', dur: 9,   color: '#F97040', op: 0.16 },
+        ];
+
+        const canvas = document.getElementById('planes-canvas');
+        planes.forEach((p, i) => {
+            const el = document.createElement('div');
+            el.className = 'plane';
+            el.style.cssText = `
+                left: ${p.x};
+                top:  ${p.y};
+                width: ${p.size}px;
+                height: ${p.size}px;
+                --r: ${p.r};
+                animation: ${p.anim} ${p.dur}s ease-in-out ${(i * 0.6).toFixed(1)}s infinite;
+            `;
+            el.innerHTML = PLANE_SVG(p.color, p.op);
+            canvas.appendChild(el);
+        });
+    </script>
+
+    <script>
+        let current = 'login';
+
+        function switchPanel(target) {
+            if (target === current) return;
+
+            const outPanel = document.getElementById('panel-' + current);
+            const inPanel  = document.getElementById('panel-' + target);
+            const outTab   = document.getElementById('tab-' + current);
+            const inTab    = document.getElementById('tab-' + target);
+
+            // Tabs
+            outTab.classList.remove('active');
+            inTab.classList.add('active');
+
+            // Animate out
+            outPanel.classList.remove('visible');
+            outPanel.style.display = 'block'; // keep in DOM briefly
+            outPanel.style.animation = 'none';
+            outPanel.offsetHeight; // reflow
+            outPanel.style.animation = 'slideOut 0.32s ease forwards';
+
+            setTimeout(() => {
+                outPanel.style.display = 'none';
+                outPanel.style.animation = '';
+                outPanel.classList.add('hidden');
+
+                // Animate in
+                inPanel.classList.remove('hidden');
+                inPanel.style.display = 'block';
+                inPanel.style.animation = 'none';
+                inPanel.offsetHeight; // reflow
+                inPanel.style.animation = 'slideIn 0.35s ease forwards';
+                inPanel.classList.add('visible');
+            }, 300);
+
+            current = target;
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass  = document.getElementById('login-password').value;
+            if (!email || !pass) {
+                alert('Please fill in all fields.');
+                return;
+            }
+            // Hook up to backend here
+            alert('Logging in as ' + email);
+        }
+
+        function handleSignup() {
+            const first = document.getElementById('su-first').value;
+            const last  = document.getElementById('su-last').value;
+            const email = document.getElementById('su-email').value;
+            const pass  = document.getElementById('su-password').value;
+            if (!first || !last || !email || !pass) {
+                alert('Please fill in all fields.');
+                return;
+            }
+            // Hook up to backend here
+            alert('Account created for ' + first + '!');
+        }
+    </script>
+</body>
+</html>
