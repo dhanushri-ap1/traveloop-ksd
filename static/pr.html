@@ -1,282 +1,769 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Travel Concierge</title>
-    <link rel="stylesheet" href="global.css">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-image: url('botbg2.jpg');
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            padding-top: 80px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorify — Travel AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --terra:   #c4603a;
+  --terra2:  #e07a52;
+  --terra-l: #f0a882;
+  --teal:    #2d7a72;
+  --teal2:   #3d9990;
+  --teal-l:  #6bbfb8;
+  --sky:     #7ab8d4;
+  --sky-l:   #b0d8ea;
+  --cream:   #f5efe6;
+  --sand:    #e8ddd0;
+  --warm:    #c9b89a;
+  --ink:     #1a1208;
+  --brown:   #4a2e1a;
+  --muted:   #8a7060;
 
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(7, 11, 25, 0.75);
-            z-index: -1;
-        }
+  --sans: 'Plus Jakarta Sans', sans-serif;
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'DM Mono', monospace;
+}
 
-        .chat-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
-            justify-content: center;
-            width: 100%;
-            max-width: 1200px;
-            padding: 20px;
-        }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-        .chat-container {
-            flex: 1;
-            min-width: 350px;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+html, body {
+  height: 100%;
+  font-family: var(--sans);
+  overflow: hidden;
+  background: #f0e8dc;
+}
 
-        .chat-container h3 {
-            text-align: center;
-            margin-bottom: 5px;
-            font-size: 20px;
-        }
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: linear-gradient(175deg,#c9e4f0 0%,#daedf7 18%,#eef6fb 32%,#f5efe6 55%,#edddd0 75%,#e0c9b8 100%);
+}
 
-        .chat-box {
-            height: 450px;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-        }
+.clouds {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+}
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(var(--blur));
+  opacity: var(--op);
+  background: white;
+  animation: drift var(--dur) ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: translateX(0) translateY(0) scale(1); }
+  to   { transform: translateX(var(--dx)) translateY(var(--dy)) scale(var(--sc)); }
+}
 
-        /* Scrollbar for chat box */
-        .chat-box::-webkit-scrollbar { width: 6px; }
-        .chat-box::-webkit-scrollbar-track { background: transparent; }
-        .chat-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+.sun-glow {
+  position: fixed;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  top: -180px; right: -80px;
+  background: radial-gradient(circle, rgba(224,122,82,0.22) 0%, rgba(196,96,58,0.1) 40%, transparent 70%);
+  filter: blur(30px);
+  z-index: 1; pointer-events: none;
+  animation: glowPulse 6s ease-in-out infinite alternate;
+}
+@keyframes glowPulse {
+  from { opacity:0.7; transform:scale(1); }
+  to   { opacity:1; transform:scale(1.06); }
+}
 
-        .message {
-            padding: 12px 18px;
-            border-radius: 18px;
-            max-width: 85%;
-            font-size: 14px;
-            line-height: 1.5;
-            animation: fadeIn 0.3s ease;
-        }
+.ocean-glow {
+  position: fixed;
+  width: 100%; height: 200px;
+  bottom: 0; left: 0;
+  background: linear-gradient(to top, rgba(45,122,114,0.15), transparent);
+  z-index: 1; pointer-events: none;
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+.nav {
+  position: fixed; top:0; left:0; right:0; z-index: 100;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: rgba(245,239,230,0.82);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(196,96,58,0.15);
+  box-shadow: 0 1px 20px rgba(196,96,58,0.08);
+}
+.logo {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 10px;
+  letter-spacing: -0.3px;
+}
+.logo-icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--terra), var(--terra2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(196,96,58,0.3);
+}
+.logo em { font-style: italic; color: var(--terra); }
 
-        .message.ai {
-            background: rgba(79, 172, 254, 0.2);
-            color: white;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid rgba(79, 172, 254, 0.3);
-        }
+.nav-links { display: flex; align-items: center; gap: 2px; }
+.nav-link {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 13px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.nav-link:hover { color: var(--ink); background: rgba(196,96,58,0.08); }
+.nav-link.active { color: var(--terra); background: rgba(196,96,58,0.1); }
 
-        .message.user {
-            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(45,122,114,0.1);
+  border: 1px solid rgba(45,122,114,0.25);
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-left: 10px;
+}
+.live-dot {
+  width: 5px; height: 5px;
+  background: var(--teal2);
+  border-radius: 50%;
+  animation: ldot 2s ease-in-out infinite;
+}
+@keyframes ldot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
 
-        .input-area {
-            display: flex;
-            gap: 10px;
-        }
+.layout {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  height: 100vh;
+  padding-top: 56px;
+}
 
-        .input-area input {
-            flex: 1;
-        }
+.header {
+  flex-shrink: 0;
+  padding: 16px 28px 12px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+  border-bottom: 1px solid rgba(196,96,58,0.1);
+  background: rgba(245,239,230,0.6);
+  backdrop-filter: blur(8px);
+}
+.header-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.header-eyebrow::before {
+  content:'';
+  width:16px; height:1px;
+  background: linear-gradient(to right, var(--terra), transparent);
+}
+.header-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+.header-title em { font-style: italic; color: var(--terra); }
+.header-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-weight: 400;
+}
 
-        .input-area button {
-            padding: 0 25px;
-        }
-    </style>
+.mood-pills { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.mood-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid rgba(0,0,0,0.1);
+  padding: 5px 12px;
+  border-radius: 100px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.5);
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+.mood-pill:hover { color: var(--terra); border-color: rgba(196,96,58,0.35); background: rgba(196,96,58,0.07); }
+.mood-pill.active { color: white; border-color: transparent; background: linear-gradient(135deg, var(--terra), var(--terra2)); box-shadow: 0 2px 10px rgba(196,96,58,0.3); }
+
+.chips {
+  flex-shrink: 0;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 9px 28px;
+  border-bottom: 1px solid rgba(196,96,58,0.08);
+  background: rgba(245,239,230,0.4);
+  backdrop-filter: blur(6px);
+}
+.chip {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--brown);
+  border: 1px solid rgba(74,46,26,0.12);
+  padding: 5px 13px;
+  border-radius: 100px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.55);
+  transition: all 0.2s;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+.chip:hover { color: var(--teal); border-color: rgba(45,122,114,0.4); background: rgba(45,122,114,0.08); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(45,122,114,0.12); }
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  padding: 16px 28px;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+.messages::-webkit-scrollbar { width: 3px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+.messages::-webkit-scrollbar-thumb { background: rgba(196,96,58,0.2); border-radius: 4px; }
+
+.msg-row {
+  display: flex; align-items: flex-end; gap: 10px;
+  animation: msgIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
+}
+@keyframes msgIn {
+  from { opacity:0; transform:translateY(10px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.avatar.ai { background: linear-gradient(135deg, var(--terra), var(--terra2)); box-shadow: 0 2px 10px rgba(196,96,58,0.25); }
+.avatar.user { background: linear-gradient(135deg, var(--teal), var(--teal2)); box-shadow: 0 2px 10px rgba(45,122,114,0.25); }
+
+.bubble {
+  max-width: 72%;
+  padding: 13px 17px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  line-height: 1.72;
+  position: relative;
+}
+.bubble.ai {
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(196,96,58,0.12);
+  border-bottom-left-radius: 4px;
+  color: var(--ink);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(74,46,26,0.08), 0 1px 4px rgba(74,46,26,0.06);
+}
+.bubble.user {
+  background: linear-gradient(135deg, rgba(45,122,114,0.85), rgba(61,153,144,0.85));
+  border: 1px solid rgba(45,122,114,0.2);
+  border-bottom-right-radius: 4px;
+  color: white;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(45,122,114,0.2);
+}
+
+.bubble strong { color: var(--terra); font-weight: 600; }
+.bubble em     { color: var(--teal); font-style: italic; }
+.bubble .bullet { display: flex; gap: 9px; padding: 2px 0; }
+.bubble .bullet::before { content: '›'; color: var(--terra2); font-size: 16px; line-height: 1.72; flex-shrink: 0; font-family: var(--serif); }
+
+.msg-actions { display: flex; gap: 5px; margin-top: 10px; padding-top: 9px; border-top: 1px solid rgba(196,96,58,0.1); }
+.act-btn-sm {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(74,46,26,0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.act-btn-sm:hover { color: var(--terra); border-color: rgba(196,96,58,0.3); }
+
+.typing-row { display: flex; align-items: flex-end; gap: 10px; animation: msgIn 0.3s ease-out; }
+.typing-bubble {
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(196,96,58,0.12);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  padding: 13px 18px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(74,46,26,0.07);
+  display: flex; gap: 5px; align-items: center;
+}
+.typing-bubble span { width: 6px; height: 6px; background: var(--terra2); border-radius: 50%; animation: tBounce 1.2s ease-in-out infinite; }
+.typing-bubble span:nth-child(2){ animation-delay:.18s }
+.typing-bubble span:nth-child(3){ animation-delay:.36s }
+@keyframes tBounce { 0%,80%,100%{ transform:translateY(0) scale(0.85); opacity:0.35; } 40%{ transform:translateY(-6px) scale(1); opacity:1; } }
+
+.bottom {
+  flex-shrink: 0;
+  background: rgba(245,239,230,0.88);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(196,96,58,0.12);
+  box-shadow: 0 -4px 30px rgba(74,46,26,0.06);
+}
+
+.action-strip { display: flex; overflow-x: auto; padding: 6px 28px 0; gap: 5px; }
+.action-strip::-webkit-scrollbar { display: none; }
+.strip-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(74,46,26,0.1);
+  padding: 5px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s;
+}
+.strip-btn:hover { color: var(--ink); border-color: rgba(74,46,26,0.2); background: rgba(255,255,255,0.85); }
+.strip-btn.hi { color: var(--terra); border-color: rgba(196,96,58,0.3); background: rgba(196,96,58,0.07); }
+
+.input-row { display: flex; align-items: flex-end; gap: 10px; padding: 8px 28px 14px; }
+
+.input-meta { flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; min-width: 68px; }
+.meta-mode { font-family: var(--mono); font-size: 9px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--terra); }
+.meta-loc { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--muted); cursor: pointer; transition: color 0.18s; }
+.meta-loc:hover { color: var(--teal); }
+.meta-loc.on { color: var(--teal2); }
+
+.input-wrap {
+  flex: 1;
+  display: flex; align-items: flex-end;
+  background: rgba(255,255,255,0.8);
+  border: 1.5px solid rgba(196,96,58,0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(8px);
+}
+.input-wrap:focus-within { border-color: rgba(196,96,58,0.45); box-shadow: 0 0 0 3px rgba(196,96,58,0.08), 0 4px 20px rgba(74,46,26,0.08); }
+.input-wrap textarea {
+  flex: 1;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  resize: none;
+  max-height: 80px;
+  padding: 11px 14px;
+}
+.input-wrap textarea::placeholder { color: var(--warm); font-style: italic; }
+
+.send-btn {
+  width: 46px; min-height: 44px;
+  background: linear-gradient(135deg, var(--terra), var(--terra2));
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.send-btn::before { content:''; position:absolute; inset:0; background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent); }
+.send-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 16px rgba(196,96,58,0.4); }
+.send-btn:active { transform: scale(0.96); }
+.send-btn:disabled { opacity:0.45; cursor:not-allowed; filter:none; box-shadow:none; }
+.send-btn svg { width:16px; height:16px; fill:white; position:relative;z-index:1; }
+
+.toast {
+  position: fixed; bottom: 90px; left: 50%; z-index: 999;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  padding: 7px 18px;
+  border-radius: 100px;
+  opacity:0; pointer-events:none;
+  transition: all 0.22s;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.error-line { color: #c0392b; }
+</style>
 </head>
-<body onload="getUserLocation()">
+<body>
 
-    <div class="overlay"></div>
+<div class="bg"></div>
+<div class="clouds">
+  <div class="cloud" style="width:500px;height:260px;top:-60px;left:-100px;--blur:55px;--op:0.65;--dur:22s;--dx:40px;--dy:10px;--sc:1.04;"></div>
+  <div class="cloud" style="width:380px;height:200px;top:10px;right:-80px;--blur:45px;--op:0.5;--dur:18s;--dx:-30px;--dy:8px;--sc:1.03;"></div>
+  <div class="cloud" style="width:280px;height:140px;top:100px;left:30%;--blur:40px;--op:0.35;--dur:26s;--dx:25px;--dy:-5px;--sc:1.02;"></div>
+  <div class="cloud" style="width:320px;height:160px;bottom:20%;right:5%;--blur:50px;--op:0.25;--dur:20s;--dx:-20px;--dy:12px;--sc:1.05;"></div>
+</div>
+<div class="sun-glow"></div>
+<div class="ocean-glow"></div>
 
-    <nav class="navbar animate-up">
-        <div class="nav-logo">
-            <a href="homepage.html">Traveloop</a>
-        </div>
-        <div class="nav-links">
-            <a href="homepage.html" class="nav-item">Home</a>
-            <a href="mapping3.html" class="nav-item">Map</a>
-            <a href="todolist.html" class="nav-item">To-Do list</a>
-            <a href="pr.html" class="nav-item" style="color: var(--primary-cyan);">Chat Bot</a>
-            <a href="scrapbook.html" class="nav-item">Snaps</a>
-        </div>
-    </nav>
+<!-- Navbar -->
+<nav class="nav">
+  <a href="#" class="logo">
+    <div class="logo-icon">✈</div>
+    Memori<em>fy</em>
+  </a>
+  <div class="nav-links">
+    <a href="homepage.html" class="nav-link">Home</a>
+    <a href="mapping3.html" class="nav-link">Map</a>
+    <a href="todolist.html" class="nav-link">To-Do</a>
+    <a href="scrapbook.html" class="nav-link">Snaps</a>
+    <a href="#" class="nav-link active">AI</a>
+    <div class="live-badge"><div class="live-dot"></div>Live</div>
+  </div>
+</nav>
 
-    <div class="chat-wrapper">
-        <!-- International Tourist Places Bot -->
-        <div class="glass-card chat-container animate-up delay-1">
-            <h3 class="text-gradient">Premium Destination Discovery</h3>
-            <div class="chat-box" id="ai">
-                <div class="message ai">Welcome. Tell me your desired luxury experience (e.g., beaches, futuristic cities, art), and I'll curate the perfect international destinations for your itinerary.</div>
-            </div>
-            <div class="input-area">
-                <input type="text" id="in" class="input-glass" placeholder="Enter a category..." onkeypress="handleEnter(event, 'reply')">
-                <button onclick="reply()" class="btn-gradient">Send</button>
-            </div>
-        </div>
 
-        <!-- Nearby Places Bot -->
-        <div class="glass-card chat-container animate-up delay-2">
-            <h3 class="text-gradient">Activity & Venue Search</h3>
-            <div class="chat-box" id="ai1">
-                <div class="message ai">Looking for high-end dining, exclusive cafes, or hidden parks nearby? Enter a category and I will guide you.</div>
-            </div>
-            <div class="input-area">
-                <input type="text" id="inp" class="input-glass" placeholder="Enter a category..." onkeypress="handleEnter(event, 'rep')">
-                <button onclick="rep()" class="btn-gradient">Send</button>
-            </div>
-        </div>
+<div class="layout">
+  <div class="header" id="headerBlock">
+    <div>
+      <div class="header-eyebrow">Travel Intelligence</div>
+      <div class="header-title">Your <em>World Guide</em></div>
+      <div class="header-sub">Destinations · Itineraries · Local knowledge · Hidden gems</div>
     </div>
+    <div class="mood-pills">
+      <button class="mood-pill active" onclick="setMood(this,'explorer')">🧭 Explorer</button>
+      <button class="mood-pill" onclick="setMood(this,'budget')">💰 Budget</button>
+      <button class="mood-pill" onclick="setMood(this,'luxury')">💎 Luxury</button>
+      <button class="mood-pill" onclick="setMood(this,'adventure')">🏔️ Adventure</button>
+      <button class="mood-pill" onclick="setMood(this,'foodie')">🍜 Foodie</button>
+      <button class="mood-pill" onclick="setMood(this,'family')">👨‍👩‍👧 Family</button>
+    </div>
+  </div>
 
-    <script>
-       const touristPlacesWorld = {
-        beaches: "Bondi Beach (Australia), Copacabana Beach (Brazil), Waikiki Beach (USA), Whitehaven Beach (Australia), Bora Bora Beach (French Polynesia), Maldives Beaches (Maldives), Tulum Beach (Mexico), Navagio Beach (Greece), Seychelles Beaches (Seychelles), Phi Phi Islands (Thailand), Maui Beaches (USA), Santorini Beaches (Greece)",
-        mountains: "Mount Everest (Nepal), K2 (Pakistan), Matterhorn (Switzerland), Mount Fuji (Japan), Andes Mountains (Chile), Rocky Mountains (USA), Kilimanjaro (Tanzania), Mont Blanc (France), Denali (USA), Elbrus (Russia), Aconcagua (Argentina), Vinson Massif (Antarctica)",
-        hillstations: "Zermatt (Switzerland), Banff (Canada), Aspen (USA), Queenstown (New Zealand), Interlaken (Switzerland), Bled (Slovenia), Sapa (Vietnam), Hallstatt (Austria), Cuzco (Peru), Chamonix (France), Lake District (UK), Grindelwald (Switzerland)",
-        naturalphenomena: "Aurora Borealis (Norway), Grand Canyon (USA), Great Barrier Reef (Australia), Salar de Uyuni (Bolivia), Mount Roraima (Venezuela), Victoria Falls (Zambia), Cliffs of Moher (Ireland), Pamukkale (Turkey), Mount Etna (Italy), Atacama Desert (Chile)",
-        art: "Louvre Museum (France), Broadway (USA), West End (UK), Venice Biennale (Italy), Sydney Opera House (Australia), Oktoberfest (Germany), Rio Carnival (Brazil), La Tomatina (Spain), Edinburgh Festival (UK), Holi Festival (India)",
-        wildlife: "Serengeti National Park (Tanzania), Yellowstone National Park (USA), Kruger National Park (South Africa), Amazon Rainforest (Brazil), Yosemite National Park (USA), Galápagos Islands (Ecuador), Ranthambore National Park (India), Banff National Park (Canada), Masai Mara (Kenya), Everglades (USA)",
-        historicalsites: "Great Wall of China (China), Machu Picchu (Peru), Pyramids of Giza (Egypt), Colosseum (Italy), Petra (Jordan), Stonehenge (UK), Acropolis of Athens (Greece), Alhambra (Spain), Taj Mahal (India), Chichen Itza (Mexico)",
-        religiousplaces: "Mecca (Saudi Arabia), Vatican City (Vatican), Golden Temple (India), Varanasi Ghats (India), Bodh Gaya (India), Jerusalem (Israel), Angkor Wat (Cambodia), St. Peter's Basilica (Vatican), Kashi Vishwanath (India), Mount Kailash (China)",
-        futuristiccities: "Dubai (UAE), Singapore (Singapore), Tokyo (Japan), Shanghai (China), Hong Kong (Hong Kong), Seoul (South Korea), New York (USA), San Francisco (USA), London (UK), Shenzhen (China)",
-        themeparks: "Disneyland (USA), Walt Disney World (USA), Universal Studios (USA), Europa Park (Germany), Legoland (UK), Tokyo Disney (Japan), Ferrari World (UAE), Efteling (Netherlands), Everland (South Korea), Chimelong Ocean Kingdom (China)",
-        food: "Bangkok (Thailand), Mumbai (India), Istanbul (Turkey), Ho Chi Minh City (Vietnam), Mexico City (Mexico), Marrakech (Morocco), Hong Kong (Hong Kong), New Orleans (USA), Seoul (South Korea), Singapore (Singapore)",
-        sportsadventure: "Skydiving in Dubai (UAE), Bungee Jumping in New Zealand (New Zealand), Whitewater Rafting in Zambezi (Zambia), Scuba Diving in Great Barrier Reef (Australia), Skiing in Swiss Alps (Switzerland), Paragliding in Interlaken (Switzerland), Rock Climbing in Yosemite (USA), Sandboarding in Atacama (Chile), Trekking in Patagonia (Argentina), Ice Climbing in Iceland (Iceland)",
-        desertadventures: "Sahara Desert (Morocco), Wadi Rum (Jordan), Namib Desert (Namibia), White Sands National Park (USA), Thar Desert (India), Gobi Desert (China), Rub' al Khali (Saudi Arabia), Sonoran Desert (USA), Atacama Desert (Chile), Painted Desert (USA)",
-        marineadventures: "Great Barrier Reef (Australia), Blue Hole (Belize), Red Sea Diving (Egypt), Galápagos Islands (Ecuador), Raja Ampat (Indonesia), Silfra Fissure (Iceland), Andaman Islands (India), Fiji Shark Diving (Fiji), Palau Jellyfish Lake (Palau), Cozumel (Mexico)",
-        scenicdrives: "Route 66 (USA), Great Ocean Road (Australia), Amalfi Coast Drive (Italy), Pacific Coast Highway (USA), Garden Route (South Africa), Icefields Parkway (Canada), Ring Road (Iceland), North Coast 500 (UK), Trollstigen (Norway), Atlantic Road (Norway)",
-        caves: "Waitomo Glowworm Caves (New Zealand), Postojna Cave (Slovenia), Luray Caverns (USA), Cenotes of Yucatán (Mexico), Reed Flute Cave (China), Mammoth Cave (USA), Skocjan Caves (Slovenia), Batu Caves (Malaysia), Fingal's Cave (UK), Jeita Grotto (Lebanon)",
-        trainjourneys: "Trans-Siberian Railway (Russia), Glacier Express (Switzerland), Rocky Mountaineer (Canada), Shinkansen Bullet Train (Japan), The Ghan (Australia), Bernina Express (Switzerland), Palace on Wheels (India), Jacobite Steam Train (UK), Rovos Rail (South Africa), Indian Pacific (Australia)",
-        islands: "Maldives (Maldives), Bora Bora (French Polynesia), Seychelles (Seychelles), Santorini (Greece), Maui (USA), Palawan (Philippines), Mauritius (Mauritius), Capri (Italy), Zanzibar (Tanzania), Jeju Island (South Korea)",
-        rainforests: "Amazon Rainforest (Brazil), Daintree Rainforest (Australia), Borneo Rainforest (Malaysia), Congo Rainforest (Democratic Republic of Congo), Monteverde Cloud Forest (Costa Rica), Tongass National Forest (USA), Sinharaja Forest (Sri Lanka), Valdivian Rainforest (Chile), Yasuni National Park (Ecuador), Madagascar Rainforest (Madagascar)",
-        biodiversity: "Madagascar (Madagascar), Sundaland (Indonesia), Amazon Basin (Brazil), Coral Triangle (Various – SE Asia & Pacific), Indo-Burma (Thailand & SE Asia), Western Ghats (India), Atlantic Forest (Brazil), Cape Floristic Region (South Africa), Himalayas (Nepal), New Zealand (New Zealand)"
-    };
+  <div class="chips" id="chipsRow">
+    <div class="chip" onclick="sendChip('Best beaches in the world')">🏖️ Best beaches</div>
+    <div class="chip" onclick="sendChip('Things to do in Goa for 3 days')">🌴 Things to do in Goa</div>
+    <div class="chip" onclick="sendChip('Hidden gems in India')">💎 Hidden gems India</div>
+    <div class="chip" onclick="sendChip('Top food cities in the world')">🍜 Top food cities</div>
+    <div class="chip" onclick="sendChip('7-day Rajasthan itinerary')">🗺️ Rajasthan itinerary</div>
+    <div class="chip" onclick="sendChip('Best mountain destinations in India')">🏔️ Mountain trips</div>
+    <div class="chip" onclick="sendChip('Budget travel tips for Southeast Asia')">💸 SE Asia budget</div>
+  </div>
 
-    function formatCategory(input) {
-        return input.toLowerCase().replace(/\s+/g, '');
+  <div class="messages" id="messages">
+    <div class="msg-row ai">
+      <div class="avatar ai">✈</div>
+      <div class="bubble ai">
+        Welcome, traveller! 🌍<br><br>
+        I'm Memorify's travel guide — ask me about <strong>any destination on Earth</strong>. Itineraries, hidden gems, local food, visa tips, packing lists, best seasons — anything.<br><br>
+        Pick a <strong>travel mood</strong> above to shape my recommendations, then ask away.
+        <div class="msg-actions">
+          <button class="act-btn-sm" onclick="copyMsg(this)">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="action-strip">
+      <button class="strip-btn hi" onclick="quickAction('itinerary')">↗ Plan itinerary</button>
+      <button class="strip-btn" onclick="quickAction('pack')">Packing list</button>
+      <button class="strip-btn" onclick="quickAction('budget')">Budget estimate</button>
+      <button class="strip-btn" onclick="quickAction('visa')">Visa info</button>
+      <button class="strip-btn" onclick="quickAction('season')">Best season</button>
+      <button class="strip-btn" onclick="quickAction('phrases')">Local phrases</button>
+      <button class="strip-btn" onclick="quickAction('transport')">Getting around</button>
+    </div>
+    <div class="input-row">
+      <div class="input-meta">
+        <div class="meta-mode" id="modeLabel">🧭 Explorer</div>
+        <div class="meta-loc" id="locLabel" onclick="shareLocation()">📍 Share location</div>
+      </div>
+      <div class="input-wrap">
+        <textarea id="userInput" rows="1"
+          placeholder="Ask about any place, itinerary, or travel question…"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ──
+// Groq uses llama models — fast and free!
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL   = 'llama-3.3-70b-versatile'; // best free model on Groq
+
+const MOODS = {
+  explorer:  { label:'🧭 Explorer',  prompt:'The user is an adventurous explorer seeking authentic, off-the-beaten-path experiences and local culture.' },
+  budget:    { label:'💰 Budget',    prompt:'The user wants budget travel. Prioritise free attractions, cheap eats, hostels, local transport, and cost-saving tips.' },
+  luxury:    { label:'💎 Luxury',    prompt:'The user prefers luxury. Recommend 5-star properties, fine dining, private experiences, and premium services.' },
+  adventure: { label:'🏔️ Adventure', prompt:'The user craves adventure — trekking, diving, climbing, camping, and wilderness experiences.' },
+  foodie:    { label:'🍜 Foodie',    prompt:'The user is a passionate foodie. Focus on local cuisine, street food, food markets, famous restaurants, and culinary culture.' },
+  family:    { label:'👨‍👩‍👧 Family',  prompt:'The user travels with family and kids. Suggest safe, child-friendly activities, family hotels, and practical tips.' },
+};
+
+const SYSTEM = m => `You are Memorify's expert travel guide — knowledgeable, warm, and precise. Like a well-travelled friend who knows everywhere deeply.
+
+TRAVELLER PROFILE: ${MOODS[m].prompt}
+
+FORMATTING — follow exactly:
+- Use **bold** for place names, section labels, key terms
+- For lists: plain "- item" lines, each 1–2 vivid sentences
+- For itineraries: day-by-day with morning / afternoon / evening beats
+- For a single destination: 8–10 things to do/see + local food picks + one insider tip
+- No markdown # headers; use **bold** for section labels
+- Responses scannable and focused — not walls of text
+- End with one concrete follow-up offer`;
+
+const QUICK = {
+  itinerary: 'I want to plan a trip. Ask me the destination and number of days.',
+  pack:      'Give me a comprehensive travel packing list.',
+  budget:    'Help me estimate a travel budget. Ask me the destination and trip length.',
+  visa:      'I need visa information. Ask me my nationality and destination.',
+  season:    'When is the best time to visit my destination? Ask me where.',
+  phrases:   'Teach me essential travel phrases. Ask me the destination country.',
+  transport: 'Explain transport options for my destination. Ask me where I am going.',
+};
+
+let mood = 'explorer';
+let history = [];
+let loading = false;
+let lat = null, lon = null;
+let apiKey = 'paste your api key here'; 
+
+// Init geolocation silently
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(p => {
+    lat = p.coords.latitude; lon = p.coords.longitude; updateLoc();
+  }, ()=>{});
+}
+
+function shareLocation() {
+  if (!navigator.geolocation) return showToast('Geolocation not available');
+  navigator.geolocation.getCurrentPosition(p => {
+    lat = p.coords.latitude; lon = p.coords.longitude; updateLoc();
+    appendMsg('ai', '📍 Got your location! Ask me about places nearby and I\'ll factor it in.', true);
+  }, () => showToast('Could not access location'));
+}
+function updateLoc() {
+  const el = document.getElementById('locLabel');
+  el.textContent = `📍 ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+  el.classList.add('on');
+}
+
+function setMood(btn, m) {
+  document.querySelectorAll('.mood-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  mood = m;
+  document.getElementById('modeLabel').textContent = MOODS[m].label;
+  showToast('Mode: ' + MOODS[m].label.replace(/^[^ ]+ /,''));
+}
+
+function quickAction(k) {
+  const ta = document.getElementById('userInput');
+  ta.value = QUICK[k]; autoResize(ta); sendMessage();
+}
+function sendChip(t) {
+  document.getElementById('userInput').value = t; sendMessage();
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+function fmt(raw) {
+  let t = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>');
+  return t.split('\n').map(line => {
+    const tr = line.trim();
+    if (!tr) return '<br>';
+    if (/^[-•]\s/.test(tr)) return `<div class="bullet">${tr.replace(/^[-•]\s/,'')}</div>`;
+    if (/^\d+\.\s/.test(tr)) return `<div class="bullet">${tr}</div>`;
+    return `<span style="display:block">${tr}</span>`;
+  }).join('');
+}
+
+function appendMsg(role, text, withActions=false) {
+  const msgs = document.getElementById('messages');
+  if (role === 'user') {
+    document.getElementById('chipsRow').style.display = 'none';
+    document.getElementById('headerBlock').style.display = 'none';
+  }
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  const av = document.createElement('div');
+  av.className = `avatar ${role}`;
+  av.textContent = role === 'ai' ? '✈' : '👤';
+
+  const bub = document.createElement('div');
+  bub.className = `bubble ${role}`;
+  const isErr = text.startsWith('__ERR__');
+  bub.innerHTML = isErr
+    ? `<span class="error-line">${fmt(text.replace('__ERR__','').trim())}</span>`
+    : fmt(text);
+
+  if (role === 'ai' && withActions) {
+    const acts = document.createElement('div');
+    acts.className = 'msg-actions';
+    acts.innerHTML = `
+      <button class="act-btn-sm" onclick="copyMsg(this)">Copy</button>
+      <button class="act-btn-sm" onclick="saveMsg(this)">Save</button>
+      <button class="act-btn-sm" onclick="speakMsg(this)">Listen</button>`;
+    bub.appendChild(acts);
+  }
+
+  row.appendChild(av); row.appendChild(bub);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.id='typing'; row.className='typing-row';
+  const av = document.createElement('div');
+  av.className='avatar ai'; av.textContent='✈';
+  const bub = document.createElement('div');
+  bub.className='typing-bubble';
+  bub.innerHTML='<span></span><span></span><span></span>';
+  row.appendChild(av); row.appendChild(bub);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing')?.remove(); }
+
+async function sendMessage() {
+  if (loading) return;
+
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value=''; input.style.height='auto';
+  appendMsg('user', text);
+
+  let userContent = text;
+  if (lat && lon && /near|nearby|local|around me/i.test(text))
+    userContent += ` [My coordinates: ${lat.toFixed(4)}, ${lon.toFixed(4)}]`;
+
+  history.push({ role:'user', content:userContent });
+  loading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  try {
+    // ── Groq API call (OpenAI-compatible format) ──
+    const res = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`   // Groq uses Bearer token
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 1024,
+        messages: [
+          { role: 'system', content: SYSTEM(mood) },
+          ...history
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const d = await res.json(); msg = d?.error?.message || msg; } catch(e){}
+      throw new Error(msg);
     }
 
-    function handleEnter(event, funcName) {
-        if (event.key === 'Enter') {
-            if (funcName === 'reply') reply();
-            if (funcName === 'rep') rep();
-        }
-    }
+    const data = await res.json();
+    const reply = data?.choices?.[0]?.message?.content;
+    if (!reply) throw new Error('Empty response from Groq');
 
-    function reply() {
-        const userInput = document.getElementById("in").value.trim();
-        if (userInput === "") return;
-        const chatBox = document.getElementById("ai");
-        chatBox.innerHTML += `<div class="message user">${userInput}</div>`;
-        setTimeout(() => {
-            const formattedKey = formatCategory(userInput);
-            const response = touristPlacesWorld[formattedKey] || "Sorry, I don't have info on that place. Try another!";
-            chatBox.innerHTML += `<div class="message ai">${response}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }, 600);
-        document.getElementById("in").value = "";
-    }
+    history.push({ role:'assistant', content:reply });
+    removeTyping();
+    appendMsg('ai', reply, true);
 
-    const apiKey = "c4d184f9cf6e4a2c88c4517c8ab34ff7";
-    let lat, lon;
-    function getUserLocation() {
-        navigator.geolocation.getCurrentPosition(position => {
-            lat = position.coords.latitude;
-            lon = position.coords.longitude;
-        }, () => {
-            console.warn("Failed to get location. Some features might not work.");
-        });
-    }
-       
-    const categoryMap = {
-        "restaurant": "catering.restaurant", "restaurants": "catering.restaurant", "cafe": "catering.cafe", "cafes": "catering.cafe", "coffee shop": "catering.cafe", "coffee": "catering.cafe", "bar": "catering.bar", "bars": "catering.bar", "hotel": "accommodation.hotel", "hotels": "accommodation.hotel", "park": "leisure.park", "parks": "leisure.park", "supermarket": "commercial.supermarket", "supermarkets": "commercial.supermarket", "mall": "commercial.shopping_mall", "malls": "commercial.shopping_mall", "shopping mall": "commercial.shopping_mall", "shopping center": "commercial.shopping_mall", "bakery": "catering.bakery", "bakeries": "catering.bakery", "clothing store": "commercial.clothes", "clothes shop": "commercial.clothes", "clothes": "commercial.clothes", "bookstore": "commercial.books", "book store": "commercial.books", "pharmacy": "healthcare.pharmacy", "pharmacies": "healthcare.pharmacy", "hospital": "healthcare.hospital", "clinic": "healthcare.clinic", "atm": "finance.atm", "bank": "finance.bank", "fast_food": "catering.fast_food", "ice_cream": "catering.ice_cream", "pub": "catering.pub", "museum": "entertainment.museum", "cinema": "entertainment.cinema", "zoo": "entertainment.zoo", "theatre": "entertainment.theatre", "theatres": "entertainment.theatre", "nightclub": "entertainment.nightclub", "nightclubs": "entertainment.nightclub", "clubs": "entertainment.nightclub", "casino": "entertainment.casino", "beach": "natural.beach", "beachs": "natural.beach", "forest": "natural.forest", "forests": "natural.forest", "viewpoint": "tourism.viewpoint", "viewpoints": "tourism.viewpoint", "camp_site": "accommodation.camping", "camp_sites": "accommodation.camping", "monument": "tourism.sights", "attraction": "tourism.attraction", "castle": "tourism.castle", "theme_park": "entertainment.theme_park", "theme_parks": "entertainment.theme_park", "hospitals": "healthcare.hospital", "doctor": "healthcare.doctor", "dental_clinic": "healthcare.dentist", "bus_station": "transport.bus_station", "train_station": "transport.train_station", "airport": "transport.airport", "car_rental": "service.car_rental", "fuel": "service.vehicle.fuel", "gas_station": "service.vehicle.fuel", "petrol_stations": "service.vehicle.fuel", "parking": "service.vehicle.parking",
-    };
+  } catch(err) {
+    removeTyping();
+    history.pop();
+    console.error('Groq API error:', err);
+    const friendly = err.message?.includes('Failed to fetch')
+      ? 'Network error — check your connection and try again.'
+      : err.message?.includes('401') || err.message?.includes('api_key')
+      ? 'Invalid API key — please check and re-enter your Groq key.'
+      : `Something went wrong: ${err.message}`;
+    appendMsg('ai', '__ERR__' + friendly);
+  }
 
-    function normalizeInput(input) {
-        return input.toLowerCase().trim().replace(/[_\s]+/g, "_");
-    }
+  loading = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
 
-    function rep() {
-        if (lat === undefined || lon === undefined) {
-            alert("Location not available yet. Please allow location access and try again.");
-            return;
-        }
-        const query1 = document.getElementById("inp").value.trim();
-        const chatbox = document.getElementById("ai1");
-        
-        if (!query1) {
-            alert("Please enter a place type.");
-            return;
-        }
-
-        chatbox.innerHTML += `<div class="message user">${query1}</div>`;
-        const query = normalizeInput(query1);
-        const category = categoryMap[query];
-        
-        if (!category) {
-            setTimeout(() => {
-                chatbox.innerHTML += `<div class='message ai'>Sorry, I don’t recognize that category. Try something like: cafe, restaurant, hotel, park, pharmacy, bookstore, mall, etc.</div>`;
-                chatbox.scrollTop = chatbox.scrollHeight;
-            }, 600);
-            return;
-        }
-
-        const url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lon},${lat},10000&limit=5&apiKey=${apiKey}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                setTimeout(() => {
-                    if (!data.features || data.features.length === 0) {
-                        chatbox.innerHTML += "<div class='message ai'>No places found nearby.</div>";
-                    } else {
-                        let resHTML = "<div class='message ai'><strong>Found these nearby:</strong><br>";
-                        data.features.forEach(place => {
-                            const name = place.properties.name || "Unknown Place";
-                            const address = place.properties.formatted || "No address available";
-                            resHTML += `<br>• <strong>${name}</strong>: ${address}`;
-                        });
-                        resHTML += "</div>";
-                        chatbox.innerHTML += resHTML;
-                    }
-                    chatbox.scrollTop = chatbox.scrollHeight;
-                }, 600);
-                document.getElementById("inp").value = "";
-            })
-            .catch(error => {
-                console.error("Error fetching places:", error);
-                chatbox.innerHTML += "<div class='message ai'>Failed to fetch places. Please try again later.</div>";
-            });
-    }
-    </script>
+function copyMsg(btn) {
+  const t = btn.closest('.bubble').innerText.replace(/Copy|Save|Listen/g,'').trim();
+  navigator.clipboard.writeText(t).then(()=>showToast('Copied!'));
+}
+function saveMsg(btn) {
+  const t = btn.closest('.bubble').innerText.replace(/Copy|Save|Listen/g,'').trim();
+  const saved = JSON.parse(localStorage.getItem('memorify_saved')||'[]');
+  saved.push({text:t, time:new Date().toISOString()});
+  localStorage.setItem('memorify_saved', JSON.stringify(saved));
+  btn.textContent='Saved ✓'; btn.style.color='var(--terra)';
+  setTimeout(()=>{ btn.textContent='Save'; btn.style.color=''; }, 2400);
+}
+function speakMsg(btn) {
+  if (!('speechSynthesis' in window)) return showToast('Speech not supported');
+  const t = btn.closest('.bubble').innerText.replace(/Copy|Save|Listen|Stop/g,'').trim().substring(0,500);
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t); u.rate = 0.92;
+  window.speechSynthesis.speak(u);
+  btn.textContent='Stop';
+  u.onend = ()=>{ btn.textContent='Listen'; };
+  btn.onclick = ()=>{ window.speechSynthesis.cancel(); btn.textContent='Listen'; btn.onclick=()=>speakMsg(btn); };
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+</script>
 </body>
 </html>
