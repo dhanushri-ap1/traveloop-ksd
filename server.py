@@ -230,13 +230,7 @@ def delete_memory(id):
     mysql.connection.commit()
     cur.close()
     return {"message": "Memory deleted"}, 200
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('You are now logged out', 'success')
-    return redirect(url_for('home'))
-
+ 
 # --- TRIPS API ---
 
 @app.route('/api/trips', methods=['GET', 'POST'])
