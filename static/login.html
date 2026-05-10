@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Traveloop</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        .login-page-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 80px;
+            background-image: url('Front.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .login-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 25, 0.7); /* Dark overlay */
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            margin-bottom: 25px;
+            font-size: 32px;
+        }
+
+        .login-container input {
+            margin-bottom: 20px;
+        }
+
+        .login-container button[onclick='handleSubmit()'] {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .switch {
+            background: none;
+            border: none;
+            color: var(--primary-cyan);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .switch:hover {
+            color: var(--primary-purple);
+            text-decoration: underline;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            font-weight: 500;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <div class="nav-logo">
+            <a href="homepage.html">Traveloop</a>
+        </div>
+        <div class="nav-links">
+            <a href="homepage.html" class="nav-item">Home</a>
+            <a href="mapping3.html" class="nav-item">Map</a>
+            <a href="todolist.html" class="nav-item">To-Do list</a>
+            <a href="pr.html" class="nav-item">Chat Bot</a>
+            <a href="scrapbook.html" class="nav-item">Snaps</a>
+        </div>
+    </nav>
+
+    <div class="login-page-wrapper">
+        <div class="login-overlay"></div>
+        <div class="glass-card login-container animate-up">
+            <h2 id="title" class="text-gradient">Login</h2>
+            
+            <input type="text" id="username" class="input-glass" placeholder="Username" pattern="[A-Za-z]+">
+            <input type="password" id="password" class="input-glass" placeholder="Password">
+            
+            <p id="message" class="message"></p>
+            
+            <button onclick="handleSubmit()" class="btn-gradient">Log In</button>
+            <br>
+            <button class="switch" onclick="toggleForm()">Don't have an account? Register Now</button>
+        </div>
+    </div>
+
+    <script>
+        let isSignUp = false;
+        let users = JSON.parse(localStorage.getItem("users")) || {};
+    
+        function saveUsers() {
+            localStorage.setItem("users", JSON.stringify(users));
+        }
+    
+        function toggleForm() {
+            isSignUp = !isSignUp;
+            document.getElementById("title").innerText = isSignUp ? "Register" : "Login";
+            document.querySelector("button[onclick='handleSubmit()']").innerText = isSignUp ? "Register" : "Log In";
+            document.querySelector(".switch").innerText = isSignUp ? "Already have an account? Login" : "Don't have an account? Register Now";
+            document.getElementById("message").innerText = "";
+        }
+    
+        function handleSubmit() {
+            let user = document.getElementById("username").value.trim();
+            let pass = document.getElementById("password").value;
+            let msg = document.getElementById("message");
+    
+            if (!/^[A-Za-z]+$/.test(user)) {
+                msg.innerText = "Username must contain only letters!";
+                msg.style.color = "#ff4d4d"; // soft red
+                return;
+            }
+    
+            if (isSignUp) {
+                if (users[user]) {
+                    msg.innerText = "Username taken!";
+                    msg.style.color = "#ff4d4d";
+                } else {
+                    users[user] = pass;
+                    saveUsers();
+                    msg.innerText = "Account created!";
+                    msg.style.color = "#4caf50"; // soft green
+                }
+            } else {
+                if (users[user] === pass) {
+                    msg.innerText = "Login successful!";
+                    msg.style.color = "#4caf50";
+                    setTimeout(() => {
+                        window.location.href = "homepage.html";
+                    }, 1000);
+                } else {
+                    msg.innerText = "Invalid username or password!";
+                    msg.style.color = "#ff4d4d";
+                }
+            }
+        }
+    </script>
+    
+</body>
+</html>
