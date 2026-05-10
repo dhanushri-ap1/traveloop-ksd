@@ -1059,7 +1059,28 @@ function saveTrip() {
   toast('✈ Trip created!');
 }
 
-function logout() { localStorage.removeItem('currentUser'); window.location.href = 'login.html'; }
+// --- Logout Modal Logic ---
+function openLogoutModal() {
+    document.getElementById('logoutModalOverlay').classList.add('open');
+}
+
+function closeLogoutModal() {
+    document.getElementById('logoutModalOverlay').classList.remove('open');
+}
+
+function closeLogoutOutside(e) {
+    if (e.target === document.getElementById('logoutModalOverlay')) closeLogoutModal();
+}
+
+function confirmLogout() {
+    // Redirect to the Flask logout route
+    window.location.href = "{{ url_for('logout') }}";
+}
+
+// Override your existing dummy logout function if it exists
+function logout() {
+    openLogoutModal();
+}
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -1067,5 +1088,23 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 </script>
+<!-- Logout Confirmation Modal -->
+<div class="modal-overlay" id="logoutModalOverlay" onclick="closeLogoutOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Confirm Logout</div>
+      <button class="modal-close" onclick="closeLogoutModal()">×</button>
+    </div>
+    <div class="form">
+      <p style="color: var(--ink2); font-size: 14px; margin-bottom: 20px;">
+        Are you sure you want to end your session? Any unsaved changes to your dashboard might be lost.
+      </p>
+      <div class="form-actions">
+        <button class="tb-btn ghost" onclick="closeLogoutModal()">Stay Logged In</button>
+        <button class="tb-btn primary" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -166,6 +166,10 @@ def add_place():
         return jsonify({"error": str(e)}), 500
     finally:
         cur.close()
-
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('home'))
 if __name__ == '__main__':
     app.run(debug=True)
