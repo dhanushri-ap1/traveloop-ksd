@@ -28,18 +28,19 @@ def signup():
         email = request.form['email']
         password = request.form['password']
         
-        # Hash password for security
         pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        user_id = str(uuid.uuid4()) # Matches CHAR(36) in your SQL
+        user_id = str(uuid.uuid4())
 
         cur = mysql.connection.cursor()
         try:
+            # This will fail because of the UNIQUE KEY uq_users_email (email) in your schema
             cur.execute("INSERT INTO users(id, first_name, last_name, email, password_hash) VALUES (%s, %s, %s, %s, %s)", 
                         (user_id, first_name, last_name, email, pw_hash))
             mysql.connection.commit()
             flash('Account created! Please login.', 'success')
         except Exception as e:
-            flash('Email already exists!', 'danger')
+            # This captures the MySQL duplicate entry error
+            flash('This email is already registered. Please use a different one.', 'danger')
         finally:
             cur.close()
         return redirect(url_for('home'))

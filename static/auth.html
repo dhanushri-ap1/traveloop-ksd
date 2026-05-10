@@ -130,6 +130,7 @@
         }
 
         /* ── TAB SWITCHER ── */
+        
         .tab-bar {
             display: flex;
             background: var(--cream);
@@ -361,7 +362,18 @@
 
         <!-- AUTH CARD -->
         <div class="auth-card">
-
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-msg" data-category="{{ category }}" style="padding: 10px; margin-bottom: 20px; border-radius: 8px; font-size: 0.85rem; text-align: center; 
+                  background-color: {{ '#f8d7da' if category == 'danger' else '#d4edda' }}; 
+                  color: {{ '#721c24' if category == 'danger' else '#155724' }}; 
+                  border: 1px solid {{ '#f5c6cb' if category == 'danger' else '#c3e6cb' }};">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
             <!-- Tab Bar -->
             <div class="tab-bar">
                 <button class="tab-btn active" id="tab-login" onclick="switchPanel('login')">Login</button>
@@ -369,66 +381,64 @@
             </div>
 
             <!-- Panels -->
-            <div class="panels">
+           <div class="panel visible" id="panel-login">
+    <p class="panel-title">Welcome back ✈️</p>
+    <p class="panel-sub">Log in to continue planning your adventures.</p>
 
-                <!-- LOGIN PANEL -->
-                <div class="panel visible" id="panel-login">
-                    <p class="panel-title">Welcome back ✈️</p>
-                    <p class="panel-sub">Log in to continue planning your adventures.</p>
+    <form action="/login" method="POST">
+        <div class="field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" placeholder="you@email.com" required>
+        </div>
+        <div class="field">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required>
+        </div>
+        <div class="forgot"><a href="#">Forgot password?</a></div>
 
-                    <div class="field">
-                        <label for="login-email">Email</label>
-                        <input type="email" id="login-email" placeholder="you@email.com">
-                    </div>
-                    <div class="field">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" placeholder="••••••••">
-                    </div>
-                    <div class="forgot"><a href="#">Forgot password?</a></div>
+        <button type="submit" class="btn-submit">Login</button>
+    </form>
 
-                    <button class="btn-submit" onclick="handleLogin()">Login</button>
+    <p class="toggle-hint">
+        Don't have an account? <span onclick="switchPanel('signup')">Sign Up</span>
+    </p>
+</div>
 
-                    <p class="toggle-hint">
-                        Don't have an account? <span onclick="switchPanel('signup')">Sign Up</span>
-                    </p>
-                </div>
+<div class="panel hidden" id="panel-signup">
+    <p class="panel-title">Join Traveloop 🌍</p>
+    <p class="panel-sub">Create an account and start your next journey.</p>
 
-                <!-- SIGNUP PANEL -->
-                <div class="panel hidden" id="panel-signup">
-                    <p class="panel-title">Join Traveloop 🌍</p>
-                    <p class="panel-sub">Create an account and start your next journey.</p>
-
-                    <div class="name-row">
-                        <div class="field">
-                            <label for="su-first">First Name</label>
-                            <input type="text" id="su-first" placeholder="Jane">
-                        </div>
-                        <div class="field">
-                            <label for="su-last">Last Name</label>
-                            <input type="text" id="su-last" placeholder="Doe">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label for="su-email">Email</label>
-                        <input type="email" id="su-email" placeholder="you@email.com">
-                    </div>
-                    <div class="field">
-                        <label for="su-password">Password</label>
-                        <input type="password" id="su-password" placeholder="••••••••">
-                    </div>
-
-                    <button class="btn-submit" onclick="handleSignup()">Create Account</button>
-
-                    <p class="terms">
-                        By signing up you agree to our <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a>.
-                    </p>
-
-                    <p class="toggle-hint">
-                        Already have an account? <span onclick="switchPanel('login')">Login</span>
-                    </p>
-                </div>
-
+    <form action="/signup" method="POST">
+        <div class="name-row">
+            <div class="field">
+                <label for="su-first">First Name</label>
+                <input type="text" id="su-first" name="first_name" placeholder="Jane" required>
             </div>
+            <div class="field">
+                <label for="su-last">Last Name</label>
+                <input type="text" id="su-last" name="last_name" placeholder="Doe" required>
+            </div>
+        </div>
+        <div class="field">
+            <label for="su-email">Email</label>
+            <input type="email" id="su-email" name="email" placeholder="you@email.com" required>
+        </div>
+        <div class="field">
+            <label for="su-password">Password</label>
+            <input type="password" id="su-password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Create Account</button>
+    </form>
+
+    <p class="terms">
+        By signing up you agree to our <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a>.
+    </p>
+
+    <p class="toggle-hint">
+        Already have an account? <span onclick="switchPanel('login')">Login</span>
+    </p>
+</div>
         </div>
     </main>
 
