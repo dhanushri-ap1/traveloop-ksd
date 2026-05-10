@@ -619,14 +619,14 @@ html, body {
       </a>
   
   
-      <a class="sb-link" href="todolist.html">
+      <a class="sb-link" href="{{ url_for('todo') }}">
         <span class="sb-icon">📋</span> Itinerary
         <span class="sb-badge" id="sbTripCount">0</span>
       </a>
-      <a class="sb-link" href="todolist.html">
+      <a class="sb-link" href="{{ url_for('todo') }}">
         <span class="sb-icon">💰</span> Budget
       </a>
-      <a class="sb-link" href="scrapbook.html">
+      <a class="sb-link" href="{{ url_for('scrap') }}">
         <span class="sb-icon">📸</span> Snaps
       </a>
       <div class="sb-section">Intelligence</div>
@@ -962,7 +962,7 @@ function loadTrips() {
           <span>📅 ${fmt(t.start)} – ${fmt(t.end)}</span>
         </div>
         <div class="trip-actions">
-          <button class="trip-btn" onclick="window.location.href='todolist.html'">View</button>
+          <button class="trip-btn" onclick="window.location.href='{{ url_for('todo') }}'">View</button>
           <button class="trip-btn" onclick="editTrip(${i})">Edit</button>
           <button class="trip-btn del" onclick="deleteTrip(${i})">Delete</button>
         </div>

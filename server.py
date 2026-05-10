@@ -85,8 +85,20 @@ def dashboard():
 @app.route('/chatbot')
 def chatbot():
     if 'logged_in' in session:
-        # Flask looks for static/mapping3.html based on your app config
+       
         return render_template('pr.html')
+    return redirect(url_for('home'))
+@app.route('/todo')
+def todo():
+    if 'logged_in' in session:
+        
+        return render_template('todolist.html')
+    return redirect(url_for('home'))
+@app.route('/scrap')
+def scrap():
+    if 'logged_in' in session:
+        
+        return render_template('scrapbook.html')
     return redirect(url_for('home'))
 if __name__ == '__main__':
     app.run(debug=True)
