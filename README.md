@@ -1,12 +1,12 @@
 # ✈️ Traveloop
 
-> A cinematic desktop travel companion app for exploring India — built with Electron, Flask, and an AI-powered chatbot.
+> A cinematic desktop travel companion app — plan trips, track budgets, chat with an AI, and build your traveller profile.
 
 ---
 
 ## 📌 What is This?
 
-**Traveloop** is a desktop application that lets users discover Indian travel destinations, plan their trips, chat with an AI travel assistant, and save their travel memories — all in one place. It combines a native desktop shell (Electron) with a Python backend for authentication, a MySQL database, and an AI chatbot powered by the Groq API.
+**Traveloop** is a desktop application built with Electron + Flask that helps users plan and remember their travels. It combines a native desktop shell with a Python auth backend, MySQL database, an AI-powered chatbot (via Groq), and a rich set of personal travel tools — all in one cohesive app.
 
 ---
 
@@ -17,25 +17,26 @@
 |------|---------|---------|
 | **Electron** | ^35.1.2 | Desktop app wrapper |
 | **HTML / CSS / JS** | — | All UI pages |
-| **Leaflet.js** | 1.9.4 | Interactive travel map |
-| **Google Fonts** | — | Playfair Display, Plus Jakarta Sans, DM Mono |
-| **globals.css** | — | Shared design system |
+| **Google Fonts** | — | Playfair Display, DM Sans, DM Mono |
+| **IndexedDB** | browser built-in | Persistent image storage for Snaps |
+| **localStorage** | browser built-in | Trip data, budget, wishlist, profile |
 
 ### 🐍 Backend (Auth Server)
 | Tool | Version | Purpose |
 |------|---------|---------|
 | **Flask** | latest | Web server & routing |
-| **flask-mysqldb** | — | MySQL ORM bridge |
+| **flask-mysqldb** | — | MySQL bridge |
 | **flask-bcrypt** | — | Password hashing |
-| **bcrypt** | 4.1.3 | Bcrypt hashing utility |
+| **bcrypt** | 4.1.3 | Bcrypt utility |
 | **PyJWT** | 2.8.0 | JWT token generation |
-| **python-dotenv** | 1.0.1 | Environment variable management |
+| **python-dotenv** | 1.0.1 | `.env` config loading |
+| **geopy** | latest | Geolocation utilities |
 | **uuid** | built-in | Unique user ID generation |
 
 ### 🗄️ Database
 | Tool | Version | Purpose |
 |------|---------|---------|
-| **MySQL** | — | User data storage |
+| **MySQL** | — | User accounts storage |
 | **mysql-connector-python** | 8.3.0 | Python MySQL driver |
 
 ### 🤖 AI Chatbot
@@ -57,82 +58,160 @@
 ```
 traveloop-ksd/
 │
-├── server.py                  # Flask backend (auth routes)
+├── server.py                  # Flask backend (auth + protected routes)
 ├── requirements.txt           # Python dependencies
+├── .env                       # Environment variables (DB, JWT, PORT)
 │
 ├── static/
-│   ├── main.js                # Electron entry point — creates BrowserWindow & app menu
-│   ├── preload.js             # Electron context bridge (security layer)
+│   ├── main.js                # Electron entry — BrowserWindow & app menu
+│   ├── preload.js             # Electron context bridge
 │   ├── renderer.js            # Frontend logic
 │   ├── globals.css            # Shared stylesheet
 │   ├── package.json           # Electron config & build scripts
 │   │
 │   ├── auth.html              # Login / Signup page (root route)
 │   ├── login.html             # Login page
-│   ├── homepage.html          # Dashboard (post-login, cinematic video bg)
-│   ├── index.html             # App index
+│   ├── dashboard.html         # 🆕 Full dashboard with sidebar layout
+│   ├── profile.html           # 🆕 Traveller profile page
 │   │
 │   ├── pr.html                # 🤖 AI Chatbot — "Memorify" (Groq LLM)
-│   ├── mapping3.html          # 🗺️ Interactive map (Leaflet.js)
-│   ├── todolist.html          # ✅ Trip to-do list & budget planner
-│   ├── scrapbook.html         # 📸 Travel memories / scrapbook
-│   │
-│   ├── goa.html               # 🏖️ Destination page — Goa
-│   ├── manali.html            # 🏔️ Destination page — Manali
-│   ├── ladakh.html            # 🏔️ Destination page — Ladakh
-│   ├── rishikesh.html         # 🌊 Destination page — Rishikesh
-│   ├── delhi.html             # 🕌 Destination page — Delhi
-│   ├── darjeeling.html        # 🍵 Destination page — Darjeeling
-│   ├── kolkata.html           # 🎨 Destination page — Kolkata
-│   ├── bangalore.html         # 💻 Destination page — Bangalore
-│   └── ahmedabad.html         # 🏛️ Destination page — Ahmedabad
+│   ├── todolist.html          # ✅ Multi-city itinerary & budget planner
+│   └── scrapbook.html         # 📸 Travel memories / Snaps
 │
-├── bg-vid.mp4                 # Background video for homepage
-├── Traveloop.png              # App logo
-└── [other image assets]       # chatbot.jpg, botbg2.jpg, ind.jpg, etc.
+└── routes/templates           # (reserved for future Flask templates)
 ```
 
 ---
 
-## ✨ Features
+## ✨ What's New
 
-### 🔐 Authentication
-- User signup with first name, last name, email, and password
-- Passwords hashed with **bcrypt** before storing
-- Login with session management via Flask's `session`
-- UUIDs used as user IDs (`CHAR(36)` in MySQL)
-- Flash messages for error/success feedback
+### 🆕 Dashboard — Complete Redesign (`dashboard.html`)
 
-### 🏠 Homepage / Dashboard
-- Cinematic full-screen video background (`bg-vid.mp4`)
-- Personalised greeting using the logged-in user's name
-- Feature cards linking to all major sections
+The old homepage has been replaced with a full app-style dashboard with a **sidebar layout**.
 
-### 🤖 AI Chatbot — *Memorify*
-- Powered by **Groq API** with `llama-3.3-70b-versatile`
-- Travel-specific system prompt and persona
-- **Mood modes**: Explorer 🧭 · Budget 💰 · Luxury 💎
-- Quick-chip suggestions:
-  - Best beaches, Things to do in Goa, Hidden gems in India
-  - Rajasthan itinerary, Budget SE Asia tips, Mountain trips, and more
-- Send with `Enter`, new line with `Shift+Enter`
+**Sidebar navigation** — persistent left sidebar with:
+- Traveloop branding and user avatar with first initial
+- Dynamic greeting (`Good morning / afternoon / evening, [Name]`)
+- Links to: Dashboard · Itinerary · Budget · Snaps · AI Guide · Analytics · Profile
+- Live trip count badge on the Itinerary link
+- Logout button
 
-### 🗺️ Interactive Map
-- Built with **Leaflet.js** on OpenStreetMap tiles
-- Destination markers with custom popups
-- Click markers to explore destination info
+**Hero banner** — gradient coral/amber banner with animated floating globe emoji, a `✈ New Trip` CTA button, and an `Ask AI Guide` button.
 
-### ✅ Trip To-Do List & Budget Planner
-- Add and manage travel tasks/itinerary items
-- Budget tracking features
+**Quick Insights row** — 3 live stat cards that pull from `localStorage`:
+- Next departure countdown (in days)
+- Number of active/upcoming trips
+- Average trip budget across all planned trips
 
-### 📸 Scrapbook / Memories
-- Visual memory cards for saved trips
-- Calendar and shared plans layout
+**Stats row** — 4 animated metric cards with staggered fade-up animation:
+- Total Trips · Destinations · Total Budget · Activities (wishlist count)
 
-### 🏙️ Destination Pages
-9 dedicated destination pages with travel info, attractions, and tips:
-**Goa · Manali · Ladakh · Rishikesh · Delhi · Darjeeling · Kolkata · Bangalore · Ahmedabad**
+**Trip management panel** — shows all saved trips with:
+- Coloured left-bar accent, emoji icon, destination, date range
+- Auto-calculated status badges: `upcoming` / `planning` / `completed`
+- Budget display per trip
+- View · Edit · Delete buttons per trip
+
+**New Trip modal** — opens on `✈ New Trip` click with fields for:
+- Trip Name, Destination, Budget (₹), Start Date, End Date
+- Saves to `localStorage` as `traveloop_trips`
+- Edit mode pre-fills the form and replaces the old entry
+
+**Budget Overview panel** — shows Total / Saved / Needed values with an animated savings progress bar and per-category bars (Flights · Hotels · Food & Fun · Transport).
+
+**Popular Destinations panel** — 6 destination quick-pick cards (Tokyo, Paris, Bali, Dubai, Manali, Singapore). Clicking any pre-fills the destination field in the New Trip modal.
+
+**Toast notifications** — bottom-right toast for all user actions.
+
+---
+
+### 🆕 Traveller Profile Page (`profile.html`)
+
+A fully interactive personal travel profile page, accessible from the sidebar under `👤 Profile`.
+
+**Cover hero** — gradient banner with:
+- Animated floating globe + plane emoji
+- User's display name (italic Playfair Display), bio, location chip, travel role
+- Chips showing: Location · Member Since · Continents visited · Trip count
+- Avatar circle (first initial) with animated green pulse dot
+- Edit Profile button
+
+**Floating stat cards** (overlap the cover, animate up on load):
+- Countries Visited · On Wishlist · Places Stamped · Achievements Unlocked
+
+**Countries Visited section** — badge grid split into two sub-grids:
+- **Visited** — coral ribbon, flag, country, city, year, hover reveals a ✓ stamp overlay
+- **Wishlist** — lavender dashed border, faded, shows `💜 Soon` instead of year
+- Add Country modal: flag emoji, country name, city/region, year, status (visited / wishlist)
+
+**World banner** — dark full-width banner showing all visited countries as flag + name chips, with a large country count on the right.
+
+**Places Stamped** — 2-column grid of individual place stamps (e.g. Burj Khalifa, Senso-ji) with:
+- Custom emoji, place name, country, date, status pill (Visited / Upcoming / Wishlist)
+- Add Place modal to log new stamps
+
+**Achievements system** — 8 badges that **auto-unlock** based on real app data:
+
+| Badge | Unlocks When |
+|-------|-------------|
+| First Flight | 1+ trip planned |
+| Asia Explorer | 3+ Asian countries visited |
+| City Hopper | 5+ places stamped |
+| Packed & Ready | 1+ trip planned |
+| Cartographer | 10+ places stamped |
+| Globe Trotter | 10+ countries visited |
+| Frequent Flyer | 5+ trips planned |
+| Passport Pro | 15+ countries visited |
+
+Locked badges are greyed out. Clicking shows a `🔒 [requirement]` toast. Unlocked badges show a green ✓ badge in the corner.
+
+**Travel Style bars** — animated width percentage bars for: Adventure & Outdoors · Food & Cuisine · Culture & Heritage · Beach & Leisure · Budget Travel.
+
+**Edit Profile modal** — update name, location, travel role, and bio. All saved to `localStorage` under `traveloop_profile` and reflected live on the cover.
+
+---
+
+### 🔄 Updated Backend Routes (`server.py`)
+
+New protected Flask routes added (all redirect to `/` if the user session is missing):
+
+| Route | Function | Template served |
+|-------|----------|-----------------|
+| `/dashboard` | `dashboard()` | `dashboard.html` |
+| `/chatbot` | `chatbot()` | `pr.html` |
+| `/todo` | `todo()` | `todolist.html` |
+| `/scrap` | `scrap()` | `scrapbook.html` |
+
+The old `homepage.html` is replaced by `dashboard.html` as the post-login landing page.
+
+---
+
+### 🔄 Scrapbook — Flask Integration (`scrapbook.html`)
+
+Now served via the `/scrap` Flask route with full Jinja2 template links:
+- Navbar uses `{{ url_for('dashboard') }}`, `{{ url_for('todo') }}`, `{{ url_for('chatbot') }}`
+- Image storage upgraded to **IndexedDB** (`MemoryDB` / `memories` store) — images persist across sessions as base64
+- Per-card editable text description (auto-saves on input)
+- Hover any card to reveal a red `×` delete button in the top-right corner
+
+---
+
+### 🔄 Environment Config — `.env` file added
+
+The app now uses a proper `.env` file (loaded via `python-dotenv`) instead of hardcoded values in `server.py`:
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=travelloop
+DB_USER=root
+DB_PASSWORD=your_password_here
+
+JWT_SECRET=any_long_random_string_here
+JWT_REFRESH_SECRET=another_long_random_string
+
+PORT=4000
+```
 
 ---
 
@@ -141,18 +220,18 @@ traveloop-ksd/
 ### Prerequisites
 - Node.js & npm
 - Python 3.x
-- MySQL server running locally
+- MySQL running locally
 
 ### 1. Install Python dependencies
 ```bash
 pip install -r requirements.txt
-# Also install: pip install flask flask-mysqldb flask-bcrypt
+pip install flask flask-mysqldb flask-bcrypt geopy
 ```
 
-### 2. Set up MySQL database
+### 2. Set up MySQL
 ```sql
-CREATE DATABASE traveloop;
-USE traveloop;
+CREATE DATABASE travelloop;
+USE travelloop;
 
 CREATE TABLE users (
   id CHAR(36) PRIMARY KEY,
@@ -163,22 +242,16 @@ CREATE TABLE users (
 );
 ```
 
-### 3. Configure environment variables
-Create a `.env` file or update `server.py`:
-```
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
-MYSQL_DB=traveloop
-```
+### 3. Configure your `.env`
+Edit the `.env` file in the project root and fill in your MySQL password and JWT secrets.
 
-### 4. Run the Flask backend
+### 4. Run Flask backend
 ```bash
 python server.py
+# Runs at http://localhost:5000
 ```
-Flask runs at `http://localhost:5000`
 
-### 5. Install Electron dependencies
+### 5. Install Electron deps
 ```bash
 cd static
 npm install
@@ -189,9 +262,9 @@ In `static/pr.html`, replace:
 ```js
 let apiKey = 'paste your api key here';
 ```
-with your actual key from [console.groq.com](https://console.groq.com)
+with your key from [console.groq.com](https://console.groq.com)
 
-### 7. Run the Electron app
+### 7. Launch the app
 ```bash
 cd static
 npm start
@@ -206,26 +279,27 @@ npm run build
 
 ---
 
-## 🔒 Security Notes
+## 🗺️ App Routes
 
-> ⚠️ Before deploying or sharing this project, fix these:
-
-- **Hardcoded MySQL password** in `server.py` — move to `.env` and use `python-dotenv`
-- **Hardcoded Groq API key** in `pr.html` — move to a backend proxy or environment variable
-- **Flask secret key** `'your_secret_key'` — replace with a strong random key
+```
+/              →  auth.html        (login / signup)
+/dashboard     →  dashboard.html   (main hub — post login)
+/chatbot       →  pr.html          (AI travel assistant)
+/todo          →  todolist.html    (itinerary & budget)
+/scrap         →  scrapbook.html   (photo memories)
+profile.html   →  (static, localStorage-powered — no Flask route needed)
+```
 
 ---
 
-## 🗺️ App Navigation (Electron Menu)
+## 🔒 Security Notes
 
-The Electron app has a native menu bar with:
+> ⚠️ Fix these before sharing or pushing to GitHub:
 
-```
-File        → Open / Save / Exit
-Menu        → Home · Map · ChatBot · To-Do-List · Snaps · Log-in
-Edit        → Undo · Redo · Cut · Copy · Paste
-Help        → About
-```
+- **MySQL password** is still visible in `server.py` — load it from `.env` using `os.getenv()`
+- **Groq API key** is hardcoded in `pr.html` — move it to a Flask proxy endpoint
+- **Flask secret key** is `'your_secret_key'` — replace with a strong random value
+- **Add `.env` to `.gitignore`** — never commit real credentials
 
 ---
 
@@ -235,4 +309,4 @@ ISC
 
 ---
 
-*Built with ✈️ wanderlust and a lot of HTML.*
+*Built with ✈️ wanderlust and a lot of localStorage.*
