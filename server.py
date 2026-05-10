@@ -86,7 +86,7 @@ def dashboard():
 def chatbot():
     if 'logged_in' in session:
        
-        return render_template('pr.html')
+        return render_template('pr.html', name=session['name'])
     return redirect(url_for('home'))
 @app.route('/todo')
 def todo():
@@ -98,7 +98,7 @@ def todo():
 def scrap():
     if 'logged_in' in session:
         
-        return render_template('scrapbook.html')
+        return render_template('scrapbook.html', name=session['name'])
     return redirect(url_for('home'))
 if __name__ == '__main__':
     app.run(debug=True)

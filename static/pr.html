@@ -438,11 +438,11 @@ html, body {
     Souven<em>air</em>
   </a>
   <div class="nav-links">
-    <a href="homepage.html" class="nav-link">Home</a>
-    <a href="mapping3.html" class="nav-link">Map</a>
-    <a href="todolist.html" class="nav-link">To-Do</a>
-    <a href="scrapbook.html" class="nav-link">Snaps</a>
-    <a href="#" class="nav-link active">AI</a>
+    <a href="{{ url_for('dashboard') }}" class="nav-link">Home</a>
+ 
+    <a href="{{ url_for('todo') }}" class="nav-link">To-Do</a>
+    <a href="{{ url_for('scrap') }}" class="nav-link">Snaps</a>
+    <a href="{{ url_for('chatbot') }}" class="nav-link active">AI</a>
     <div class="live-badge"><div class="live-dot"></div>Live</div>
   </div>
 </nav>

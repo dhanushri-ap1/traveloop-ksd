@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Itineraries & Budgets</title>
-  <link rel="stylesheet" href="globals.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='globals.css') }}">
   <style>
     body {
       display: flex;
@@ -138,18 +138,17 @@
 </head>
 <body>
 
-  <img src="./airplane-mode .png" class="plane">
+  <img src="{{ url_for('static', filename='airplane-mode .png') }}" class="plane">
 
   <nav class="navbar animate-up">
     <div class="nav-logo">
-      <a href="homepage.html">Traveloop</a>
+      <a href="{{ url_for('dashboard') }}">Traveloop</a>
     </div>
     <div class="nav-links">
-      <a href="homepage.html" class="nav-item">Home</a>
-      <a href="mapping3.html" class="nav-item">Map</a>
-      <a href="todolist.html" class="nav-item" style="color: var(--primary-cyan);">To-Do list</a>
-      <a href="pr.html" class="nav-item">Chat Bot</a>
-      <a href="scrapbook.html" class="nav-item">Snaps</a>
+      <a href="{{ url_for('dashboard') }}" class="nav-item">Home</a>
+      <a href="{{ url_for('todo') }}" class="nav-item" style="color: var(--primary-cyan);">To-Do list</a>
+      <a href="{{ url_for('chatbot') }}" class="nav-item">Chat Bot</a>
+      <a href="{{ url_for('scrap') }}" class="nav-item">Snaps</a>
     </div>
   </nav>
 
