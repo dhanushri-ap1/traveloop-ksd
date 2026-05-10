@@ -13,7 +13,7 @@ geolocator = Nominatim(user_agent="traveloop_explorer")
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Shas@8131mi'
+app.config['MYSQL_PASSWORD'] = 'kesi@6549'
 app.config['MYSQL_DB'] = 'traveloop'
 # Use DictCursor to make returning JSON data much easier
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor' 
@@ -166,10 +166,177 @@ def add_place():
         return jsonify({"error": str(e)}), 500
     finally:
         cur.close()
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('home'))
+
+# --- MEMORY / SCRAPBOOK API ROUTES ---
+
+@app.route('/save_memory', methods=['POST'])
+def save_memory():
+    if 'user_id' not in session:
+        return {"error": "Unauthorized"}, 401
+    
+    data = request.get_json()
+    image_base64 = data.get('image') 
+    description = data.get('description')
+    user_id = session['user_id']
+
+    # Remove metadata prefix (e.g., "data:image/jpeg;base64,") before saving to DB
+    if "," in image_base64:
+        image_base64 = image_base64.split(",")[1]
+
+    cur = mysql.connection.cursor()
+    # Inserting into the 'memories' table linked to the current user
+    cur.execute("INSERT INTO memories (user_id, image_data, description) VALUES (%s, %s, %s)", 
+                (user_id, image_base64, description))
+    mysql.connection.commit()
+    cur.close()
+    return {"message": "Memory saved successfully!"}, 200
+
+@app.route('/get_memories')
+def get_memories():
+    if 'user_id' not in session:
+        return {"error": "Unauthorized"}, 401
+    
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+    # Fetch image data from your MySQL 'memories' table
+    cur.execute("SELECT id, image_data, description FROM memories WHERE user_id = %s ORDER BY created_at DESC", [user_id])
+    rows = cur.fetchall()
+    cur.close()
+
+    memories = []
+    for row in rows:
+        memories.append({
+            "id": row[0],
+            # CRITICAL FIX: The f-string adds the prefix the browser needs to render the image
+            "image": f"data:image/jpeg;base64,{row[1]}", 
+            "description": row[2]
+        })
+    return {"memories": memories}
+
+@app.route('/delete_memory/<int:id>', methods=['DELETE'])
+def delete_memory(id):
+    if 'user_id' not in session:
+        return {"error": "Unauthorized"}, 401
+    
+    cur = mysql.connection.cursor()
+    # Ensure the user can only delete their own images
+    cur.execute("DELETE FROM memories WHERE id = %s AND user_id = %s", (id, session['user_id']))
+    mysql.connection.commit()
+    cur.close()
+    return {"message": "Memory deleted"}, 200
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You are now logged out', 'success')
+    return redirect(url_for('home'))
+
+# --- TRIPS API ---
+
+@app.route('/api/trips', methods=['GET', 'POST'])
+def handle_trips():
+    if 'logged_in' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    cur = mysql.connection.cursor()
+    uid = session['user_id']
+
+    if request.method == 'POST':
+        data = request.json
+        cur.execute(
+            'INSERT INTO trips (user_id, name, destination, budget, start_date, end_date) VALUES (%s, %s, %s, %s, %s, %s)',
+            (uid, data['name'], data.get('dest'), data.get('budget') or None,
+             data.get('start') or None, data.get('end') or None)
+        )
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({"status": "success"})
+
+    cur.execute('SELECT * FROM trips WHERE user_id = %s ORDER BY created_at DESC', (uid,))
+    trips = cur.fetchall()
+    cur.close()
+    return jsonify(trips)
+
+@app.route('/api/trips/<int:trip_id>', methods=['DELETE'])
+def delete_trip(trip_id):
+    if 'logged_in' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    cur = mysql.connection.cursor()
+    cur.execute('DELETE FROM trips WHERE id = %s AND user_id = %s', (trip_id, session['user_id']))
+    mysql.connection.commit()
+    cur.close()
+    return jsonify({"status": "deleted"})
+
+# --- WISHLIST API ---
+
+@app.route('/api/wishlist', methods=['GET', 'POST'])
+def handle_wishlist():
+    if 'logged_in' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    cur = mysql.connection.cursor()
+    uid = session['user_id']
+
+    if request.method == 'POST':
+        data = request.json
+        cur.execute('INSERT INTO wishlist_items (user_id, item_name) VALUES (%s, %s)', (uid, data['name']))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({"status": "success"})
+
+    cur.execute('SELECT * FROM wishlist_items WHERE user_id = %s', (uid,))
+    items = cur.fetchall()
+    cur.close()
+    return jsonify(items)
+
+@app.route('/api/wishlist/<int:item_id>', methods=['DELETE', 'PATCH'])
+def update_wishlist_item(item_id):
+    if 'logged_in' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    cur = mysql.connection.cursor()
+    uid = session['user_id']
+
+    if request.method == 'DELETE':
+        cur.execute('DELETE FROM wishlist_items WHERE id = %s AND user_id = %s', (item_id, uid))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({"status": "deleted"})
+
+    # PATCH — toggle is_completed
+    data = request.json
+    cur.execute(
+        'UPDATE wishlist_items SET is_completed = %s WHERE id = %s AND user_id = %s',
+        (1 if data.get('completed') else 0, item_id, uid)
+    )
+    mysql.connection.commit()
+    cur.close()
+    return jsonify({"status": "updated"})
+
+# --- STATS API ---
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    if 'logged_in' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    cur = mysql.connection.cursor()
+    uid = session['user_id']
+
+    cur.execute('SELECT COUNT(*) as total_trips, SUM(budget) as total_budget FROM trips WHERE user_id = %s', (uid,))
+    trip_stats = cur.fetchone()
+
+    cur.execute('SELECT COUNT(*) as wishlist_count FROM wishlist_items WHERE user_id = %s', (uid,))
+    wish_stats = cur.fetchone()
+
+    cur.close()
+    return jsonify({
+        "trips": trip_stats['total_trips'],
+        "budget": float(trip_stats['total_budget'] or 0),
+        "wishlist": wish_stats['wishlist_count']
+    })
+
 if __name__ == '__main__':
     app.run(debug=True)

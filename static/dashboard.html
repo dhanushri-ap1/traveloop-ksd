@@ -620,12 +620,9 @@ html, body {
   
   
       <a class="sb-link" href="{{ url_for('todo') }}">
-        <span class="sb-icon">📋</span> Itinerary
+        <span class="sb-icon">📋</span> Itinerary & Budget
         <span class="sb-badge" id="sbTripCount">0</span>
-      </a>
-      <a class="sb-link" href="{{ url_for('todo') }}">
-        <span class="sb-icon">💰</span> Budget
-      </a>
+      </a> 
       <a class="sb-link" href="{{ url_for('scrap') }}">
         <span class="sb-icon">📸</span> Snaps
       </a>
@@ -869,80 +866,68 @@ html, body {
 <div class="toast" id="toast"></div>
 
 <script>
-const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } };
-const set = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+// ── Shared constants ──────────────────────────────────────────────────────────
+const COLORS    = ['coral','lavender','amber','sage'];
+const EMOJIS    = ['✈️','🗺️','🏖️','🏔️','🌴','🌏','🗼','🏯'];
+const COLOR_MAP = { coral:'var(--coral)', lavender:'var(--lavender)', amber:'var(--amber)', sage:'var(--sage)' };
 
-window.addEventListener('DOMContentLoaded', () => {
+let allTrips = []; // in-memory cache used by loadInsights & animateBars
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
   initUser();
-  loadStats();
-  loadTrips();
-  loadBudget();
   loadDestinations();
-  loadInsights();
+  await Promise.all([loadStats(), loadTrips()]);
+  loadBudget();
   setTimeout(animateBars, 350);
 });
 
+// ── User greeting (name injected by Flask) ────────────────────────────────────
 function initUser() {
-  const users = get('users') || {};
-  const keys = Object.keys(users);
-  const stored = localStorage.getItem('currentUser') || (keys.length ? keys[keys.length-1] : 'Traveller');
-  const name = stored.charAt(0).toUpperCase() + stored.slice(1);
-  localStorage.setItem('currentUser', stored);
-  document.getElementById('sbName').textContent = name;
-  document.getElementById('sbAvatar').textContent = name.charAt(0).toUpperCase();
+  const name = "{{ name }}";
+  document.getElementById('sbName').textContent    = name;
+  document.getElementById('sbAvatar').textContent  = name.charAt(0).toUpperCase();
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('greetLabel').textContent = g;
   document.getElementById('greetTitle').textContent = `Where to next, ${name}?`;
 }
 
-function loadStats() {
-  const trips = get('traveloop_trips') || [];
-  const wishlist = get('wishlist') || [];
-  const budget = parseFloat(localStorage.getItem('budget')) || 0;
-  document.getElementById('statTrips').textContent = trips.length;
-  document.getElementById('statCities').textContent = trips.filter(t => t.dest).length;
-  document.getElementById('statBudget').textContent = budget ? `₹${budget.toLocaleString('en-IN')}` : '₹0';
-  document.getElementById('statActivities').textContent = wishlist.length;
-  document.getElementById('sbTripCount').textContent = trips.length;
+// ── Stats (from /api/stats) ───────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res  = await fetch('/api/stats');
+    const data = await res.json();
+    document.getElementById('statTrips').textContent      = data.trips;
+    document.getElementById('statCities').textContent     = data.trips; // one destination per trip
+    document.getElementById('statBudget').textContent     = data.budget ? `₹${data.budget.toLocaleString('en-IN')}` : '₹0';
+    document.getElementById('statActivities').textContent = data.wishlist;
+    document.getElementById('sbTripCount').textContent    = data.trips;
+  } catch(e) { console.error('loadStats:', e); }
 }
 
-function loadInsights() {
-  const trips = get('traveloop_trips') || [];
-  const now = new Date();
-
-  const upcoming = trips.filter(t => t.start && new Date(t.start) > now).sort((a,b) => new Date(a.start)-new Date(b.start));
-  if (upcoming.length) {
-    const diff = Math.round((new Date(upcoming[0].start) - now) / 86400000);
-    document.getElementById('insNextDep').textContent = diff <= 0 ? 'Today!' : `${diff}d`;
-    document.getElementById('insNextName').textContent = upcoming[0].name || 'Unnamed trip';
-  }
-
-  const active = trips.filter(t => t.start && new Date(t.start) > now).length;
-  document.getElementById('insActiveTrips').textContent = active;
-
-  const withBudget = trips.filter(t => t.budget && parseFloat(t.budget) > 0);
-  const avg = withBudget.length ? Math.round(withBudget.reduce((s,t) => s + parseFloat(t.budget), 0) / withBudget.length) : 0;
-  document.getElementById('insAvgBudget').textContent = avg ? `₹${avg.toLocaleString('en-IN')}` : '₹0';
+// ── Trips list (from /api/trips) ──────────────────────────────────────────────
+async function loadTrips() {
+  try {
+    const res = await fetch('/api/trips');
+    allTrips  = await res.json();
+    renderTrips(allTrips);
+    loadInsights();
+  } catch(e) { console.error('loadTrips:', e); }
 }
 
-const COLORS = ['coral','lavender','amber','sage'];
-const EMOJIS = ['✈️','🗺️','🏖️','🏔️','🌴','🌏','🗼','🏯'];
-const COLOR_MAP = { coral: 'var(--coral)', lavender: 'var(--lavender)', amber: 'var(--amber)', sage: 'var(--sage)' };
-
-function loadTrips() {
-  const trips = get('traveloop_trips') || [];
+function renderTrips(trips) {
   const container = document.getElementById('tripsContainer');
   if (!trips.length) {
     container.innerHTML = `<div class="empty"><div class="empty-icon">✈</div>No trips yet — click <strong>✈ New Trip</strong> to start!</div>`;
     return;
   }
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : '—';
+  const now = new Date();
   container.innerHTML = trips.map((t, i) => {
-    const c = COLORS[i % COLORS.length];
+    const c   = COLORS[i % COLORS.length];
     const emoji = EMOJIS[i % EMOJIS.length];
-    const fmt = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : '—';
-    const now = new Date();
-    const sd = t.start ? new Date(t.start) : null;
+    const sd  = t.start_date ? new Date(t.start_date) : null;
     const status = !sd ? 'planning' : sd > now ? 'upcoming' : 'completed';
     const statusClass = { upcoming:'ts-upcoming', planning:'ts-planning', completed:'ts-completed' }[status];
     const bud = t.budget ? `₹${parseFloat(t.budget).toLocaleString('en-IN')}` : '—';
@@ -953,13 +938,12 @@ function loadTrips() {
       <div class="trip-info">
         <div class="trip-name">${t.name || 'Unnamed Trip'}</div>
         <div class="trip-meta">
-          <span>📍 ${t.dest || 'No destination'}</span>
-          <span>📅 ${fmt(t.start)} – ${fmt(t.end)}</span>
+          <span>📍 ${t.destination || 'No destination'}</span>
+          <span>📅 ${fmt(t.start_date)} – ${fmt(t.end_date)}</span>
         </div>
         <div class="trip-actions">
           <button class="trip-btn" onclick="window.location.href='{{ url_for('todo') }}'">View</button>
-          <button class="trip-btn" onclick="editTrip(${i})">Edit</button>
-          <button class="trip-btn del" onclick="deleteTrip(${i})">Delete</button>
+          <button class="trip-btn del" onclick="deleteTrip(${t.id})">Delete</button>
         </div>
       </div>
       <div class="trip-right">
@@ -970,49 +954,70 @@ function loadTrips() {
   }).join('');
 }
 
-function deleteTrip(i) {
-  const trips = get('traveloop_trips') || [];
-  trips.splice(i, 1);
-  set('traveloop_trips', trips);
-  loadTrips(); loadStats(); loadInsights();
+async function deleteTrip(id) {
+  await fetch(`/api/trips/${id}`, { method: 'DELETE' });
   toast('🗑 Trip deleted');
+  await Promise.all([loadTrips(), loadStats()]);
+  loadBudget();
 }
 
-function editTrip(i) {
-  const trips = get('traveloop_trips') || [];
-  const t = trips[i];
-  document.getElementById('mName').value = t.name || '';
-  document.getElementById('mDest').value = t.dest || '';
-  document.getElementById('mBudget').value = t.budget || '';
-  document.getElementById('mStart').value = t.start || '';
-  document.getElementById('mEnd').value = t.end || '';
-  trips.splice(i, 1);
-  set('traveloop_trips', trips);
-  openModal();
+// ── Insights panel (derives from allTrips cache) ──────────────────────────────
+function loadInsights() {
+  const now = new Date();
+  const upcoming = allTrips
+    .filter(t => t.start_date && new Date(t.start_date) > now)
+    .sort((a,b) => new Date(a.start_date) - new Date(b.start_date));
+
+  if (upcoming.length) {
+    const diff = Math.round((new Date(upcoming[0].start_date) - now) / 86400000);
+    document.getElementById('insNextDep').textContent  = diff <= 0 ? 'Today!' : `${diff}d`;
+    document.getElementById('insNextName').textContent = upcoming[0].name || 'Unnamed trip';
+  }
+
+  document.getElementById('insActiveTrips').textContent = upcoming.length;
+
+  const withBudget = allTrips.filter(t => t.budget && parseFloat(t.budget) > 0);
+  const avg = withBudget.length
+    ? Math.round(withBudget.reduce((s,t) => s + parseFloat(t.budget), 0) / withBudget.length)
+    : 0;
+  document.getElementById('insAvgBudget').textContent = avg ? `₹${avg.toLocaleString('en-IN')}` : '₹0';
 }
 
-function loadBudget() {
-  const budget  = parseFloat(localStorage.getItem('budget'))  || 0;
-  const savings = parseFloat(localStorage.getItem('savings')) || 0;
-  const needed  = Math.max(budget - savings, 0);
-  const pct     = budget > 0 ? Math.min(Math.round((savings / budget) * 100), 100) : 0;
-  const fmt = v => `₹${v.toLocaleString('en-IN')}`;
-  document.getElementById('bTotal').textContent  = fmt(budget);
-  document.getElementById('bSaved').textContent  = fmt(savings);
-  document.getElementById('bNeeded').textContent = fmt(needed);
-  document.getElementById('bPct').textContent    = pct + '%';
-  document.getElementById('bBar').style.width    = pct + '%';
+// ── Budget panel (total from API; savings kept in localStorage) ───────────────
+async function loadBudget() {
+  try {
+    const res    = await fetch('/api/stats');
+    const data   = await res.json();
+    const budget  = data.budget || 0;
+    const savings = parseFloat(localStorage.getItem('savings')) || 0;
+    const needed  = Math.max(budget - savings, 0);
+    const pct     = budget > 0 ? Math.min(Math.round((savings / budget) * 100), 100) : 0;
+    const fmt     = v => `₹${v.toLocaleString('en-IN')}`;
+    document.getElementById('bTotal').textContent  = fmt(budget);
+    document.getElementById('bSaved').textContent  = fmt(savings);
+    document.getElementById('bNeeded').textContent = fmt(needed);
+    document.getElementById('bPct').textContent    = pct + '%';
+    document.getElementById('bBar').style.width    = pct + '%';
+  } catch(e) { console.error('loadBudget:', e); }
 }
 
+function animateBars() {
+  // bar width already set by loadBudget; this triggers the CSS transition
+  const bar = document.getElementById('bBar');
+  const cur = bar.style.width;
+  bar.style.width = '0%';
+  requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = cur; }));
+}
+
+// ── Destinations grid (static) ────────────────────────────────────────────────
 const DESTS = [
-  { flag:'🇯🇵', city:'Tokyo',     country:'Japan',       cost:'₹60k+' },
-  { flag:'🇫🇷', city:'Paris',     country:'France',      cost:'₹80k+' },
-  { flag:'🇮🇩', city:'Bali',      country:'Indonesia',   cost:'₹35k+' },
-  { flag:'🇦🇪', city:'Dubai',     country:'UAE',         cost:'₹50k+' },
-  { flag:'🇮🇳', city:'Manali',    country:'India',       cost:'₹12k+' },
-  { flag:'🇸🇬', city:'Singapore', country:'Singapore',   cost:'₹45k+' },
+  { flag:'🇯🇵', city:'Tokyo',     country:'Japan',     cost:'₹60k+' },
+  { flag:'🇫🇷', city:'Paris',     country:'France',    cost:'₹80k+' },
+  { flag:'🇮🇩', city:'Bali',      country:'Indonesia', cost:'₹35k+' },
+  { flag:'🇦🇪', city:'Dubai',     country:'UAE',       cost:'₹50k+' },
+  { flag:'🇮🇳', city:'Manali',    country:'India',     cost:'₹12k+' },
+  { flag:'🇸🇬', city:'Singapore', country:'Singapore', cost:'₹45k+' },
 ];
-
 function loadDestinations() {
   document.getElementById('destGrid').innerHTML = DESTS.map(d => `
     <div class="dest-card" onclick="quickTrip('${d.city}')">
@@ -1022,43 +1027,42 @@ function loadDestinations() {
       <div class="dest-price">${d.cost}</div>
     </div>`).join('');
 }
-
-function quickTrip(city) {
+function quickTrip(city) { 
   document.getElementById('mDest').value = city;
   openModal();
   toast(`📍 ${city} pre-filled!`);
 }
 
-function animateBars() {
-  const budget  = parseFloat(localStorage.getItem('budget'))  || 0;
-  const savings = parseFloat(localStorage.getItem('savings')) || 0;
-  const pct = budget > 0 ? Math.min(Math.round((savings / budget) * 100), 100) : 0;
-  document.getElementById('bBar').style.width = pct + '%';
-}
-
-function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal()  { document.getElementById('modalOverlay').classList.add('open'); }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 function closeOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
-function saveTrip() {
+// ── Save trip (POST /api/trips) ───────────────────────────────────────────────
+async function saveTrip() {
   const name = document.getElementById('mName').value.trim();
   if (!name) { toast('Please enter a trip name'); return; }
-  const trips = get('traveloop_trips') || [];
-  trips.unshift({
-    name,
-    dest:   document.getElementById('mDest').value.trim(),
-    budget: document.getElementById('mBudget').value.trim(),
-    start:  document.getElementById('mStart').value,
-    end:    document.getElementById('mEnd').value,
-    created: new Date().toISOString()
+
+  await fetch('/api/trips', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      dest:   document.getElementById('mDest').value.trim(),
+      budget: document.getElementById('mBudget').value.trim(),
+      start:  document.getElementById('mStart').value,
+      end:    document.getElementById('mEnd').value,
+    })
   });
-  set('traveloop_trips', trips);
+
   closeModal();
   ['mName','mDest','mBudget','mStart','mEnd'].forEach(id => document.getElementById(id).value = '');
-  loadTrips(); loadStats(); loadInsights();
   toast('✈ Trip created!');
+  await Promise.all([loadTrips(), loadStats()]);
+  loadBudget();
 }
 
+// ── Logout ────────────────────────────────────────────────────────────────────
 // --- Logout Modal Logic ---
 function openLogoutModal() {
     document.getElementById('logoutModalOverlay').classList.add('open');
@@ -1082,12 +1086,14 @@ function logout() {
     openLogoutModal();
 }
 
+// ── Toast ─────────────────────────────────────────────────────────────────────
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 </script>
+
 <!-- Logout Confirmation Modal -->
 <div class="modal-overlay" id="logoutModalOverlay" onclick="closeLogoutOutside(event)">
   <div class="modal">
