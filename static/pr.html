@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Concierge</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('botbg2.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding-top: 80px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 25, 0.75);
+            z-index: -1;
+        }
+
+        .chat-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .chat-container {
+            flex: 1;
+            min-width: 350px;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-container h3 {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+
+        .chat-box {
+            height: 450px;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Scrollbar for chat box */
+        .chat-box::-webkit-scrollbar { width: 6px; }
+        .chat-box::-webkit-scrollbar-track { background: transparent; }
+        .chat-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+        .message {
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 85%;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.ai {
+            background: rgba(79, 172, 254, 0.2);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(79, 172, 254, 0.3);
+        }
+
+        .message.user {
+            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+        }
+
+        .input-area button {
+            padding: 0 25px;
+        }
+    </style>
+</head>
+<body onload="getUserLocation()">
+
+    <div class="overlay"></div>
+
+    <nav class="navbar animate-up">
+        <div class="nav-logo">
+            <a href="homepage.html">Traveloop</a>
+        </div>
+        <div class="nav-links">
+            <a href="homepage.html" class="nav-item">Home</a>
+            <a href="mapping3.html" class="nav-item">Map</a>
+            <a href="todolist.html" class="nav-item">To-Do list</a>
+            <a href="pr.html" class="nav-item" style="color: var(--primary-cyan);">Chat Bot</a>
+            <a href="scrapbook.html" class="nav-item">Snaps</a>
+        </div>
+    </nav>
+
+    <div class="chat-wrapper">
+        <!-- International Tourist Places Bot -->
+        <div class="glass-card chat-container animate-up delay-1">
+            <h3 class="text-gradient">Premium Destination Discovery</h3>
+            <div class="chat-box" id="ai">
+                <div class="message ai">Welcome. Tell me your desired luxury experience (e.g., beaches, futuristic cities, art), and I'll curate the perfect international destinations for your itinerary.</div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="in" class="input-glass" placeholder="Enter a category..." onkeypress="handleEnter(event, 'reply')">
+                <button onclick="reply()" class="btn-gradient">Send</button>
+            </div>
+        </div>
+
+        <!-- Nearby Places Bot -->
+        <div class="glass-card chat-container animate-up delay-2">
+            <h3 class="text-gradient">Activity & Venue Search</h3>
+            <div class="chat-box" id="ai1">
+                <div class="message ai">Looking for high-end dining, exclusive cafes, or hidden parks nearby? Enter a category and I will guide you.</div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="inp" class="input-glass" placeholder="Enter a category..." onkeypress="handleEnter(event, 'rep')">
+                <button onclick="rep()" class="btn-gradient">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       const touristPlacesWorld = {
+        beaches: "Bondi Beach (Australia), Copacabana Beach (Brazil), Waikiki Beach (USA), Whitehaven Beach (Australia), Bora Bora Beach (French Polynesia), Maldives Beaches (Maldives), Tulum Beach (Mexico), Navagio Beach (Greece), Seychelles Beaches (Seychelles), Phi Phi Islands (Thailand), Maui Beaches (USA), Santorini Beaches (Greece)",
+        mountains: "Mount Everest (Nepal), K2 (Pakistan), Matterhorn (Switzerland), Mount Fuji (Japan), Andes Mountains (Chile), Rocky Mountains (USA), Kilimanjaro (Tanzania), Mont Blanc (France), Denali (USA), Elbrus (Russia), Aconcagua (Argentina), Vinson Massif (Antarctica)",
+        hillstations: "Zermatt (Switzerland), Banff (Canada), Aspen (USA), Queenstown (New Zealand), Interlaken (Switzerland), Bled (Slovenia), Sapa (Vietnam), Hallstatt (Austria), Cuzco (Peru), Chamonix (France), Lake District (UK), Grindelwald (Switzerland)",
+        naturalphenomena: "Aurora Borealis (Norway), Grand Canyon (USA), Great Barrier Reef (Australia), Salar de Uyuni (Bolivia), Mount Roraima (Venezuela), Victoria Falls (Zambia), Cliffs of Moher (Ireland), Pamukkale (Turkey), Mount Etna (Italy), Atacama Desert (Chile)",
+        art: "Louvre Museum (France), Broadway (USA), West End (UK), Venice Biennale (Italy), Sydney Opera House (Australia), Oktoberfest (Germany), Rio Carnival (Brazil), La Tomatina (Spain), Edinburgh Festival (UK), Holi Festival (India)",
+        wildlife: "Serengeti National Park (Tanzania), Yellowstone National Park (USA), Kruger National Park (South Africa), Amazon Rainforest (Brazil), Yosemite National Park (USA), Galápagos Islands (Ecuador), Ranthambore National Park (India), Banff National Park (Canada), Masai Mara (Kenya), Everglades (USA)",
+        historicalsites: "Great Wall of China (China), Machu Picchu (Peru), Pyramids of Giza (Egypt), Colosseum (Italy), Petra (Jordan), Stonehenge (UK), Acropolis of Athens (Greece), Alhambra (Spain), Taj Mahal (India), Chichen Itza (Mexico)",
+        religiousplaces: "Mecca (Saudi Arabia), Vatican City (Vatican), Golden Temple (India), Varanasi Ghats (India), Bodh Gaya (India), Jerusalem (Israel), Angkor Wat (Cambodia), St. Peter's Basilica (Vatican), Kashi Vishwanath (India), Mount Kailash (China)",
+        futuristiccities: "Dubai (UAE), Singapore (Singapore), Tokyo (Japan), Shanghai (China), Hong Kong (Hong Kong), Seoul (South Korea), New York (USA), San Francisco (USA), London (UK), Shenzhen (China)",
+        themeparks: "Disneyland (USA), Walt Disney World (USA), Universal Studios (USA), Europa Park (Germany), Legoland (UK), Tokyo Disney (Japan), Ferrari World (UAE), Efteling (Netherlands), Everland (South Korea), Chimelong Ocean Kingdom (China)",
+        food: "Bangkok (Thailand), Mumbai (India), Istanbul (Turkey), Ho Chi Minh City (Vietnam), Mexico City (Mexico), Marrakech (Morocco), Hong Kong (Hong Kong), New Orleans (USA), Seoul (South Korea), Singapore (Singapore)",
+        sportsadventure: "Skydiving in Dubai (UAE), Bungee Jumping in New Zealand (New Zealand), Whitewater Rafting in Zambezi (Zambia), Scuba Diving in Great Barrier Reef (Australia), Skiing in Swiss Alps (Switzerland), Paragliding in Interlaken (Switzerland), Rock Climbing in Yosemite (USA), Sandboarding in Atacama (Chile), Trekking in Patagonia (Argentina), Ice Climbing in Iceland (Iceland)",
+        desertadventures: "Sahara Desert (Morocco), Wadi Rum (Jordan), Namib Desert (Namibia), White Sands National Park (USA), Thar Desert (India), Gobi Desert (China), Rub' al Khali (Saudi Arabia), Sonoran Desert (USA), Atacama Desert (Chile), Painted Desert (USA)",
+        marineadventures: "Great Barrier Reef (Australia), Blue Hole (Belize), Red Sea Diving (Egypt), Galápagos Islands (Ecuador), Raja Ampat (Indonesia), Silfra Fissure (Iceland), Andaman Islands (India), Fiji Shark Diving (Fiji), Palau Jellyfish Lake (Palau), Cozumel (Mexico)",
+        scenicdrives: "Route 66 (USA), Great Ocean Road (Australia), Amalfi Coast Drive (Italy), Pacific Coast Highway (USA), Garden Route (South Africa), Icefields Parkway (Canada), Ring Road (Iceland), North Coast 500 (UK), Trollstigen (Norway), Atlantic Road (Norway)",
+        caves: "Waitomo Glowworm Caves (New Zealand), Postojna Cave (Slovenia), Luray Caverns (USA), Cenotes of Yucatán (Mexico), Reed Flute Cave (China), Mammoth Cave (USA), Skocjan Caves (Slovenia), Batu Caves (Malaysia), Fingal's Cave (UK), Jeita Grotto (Lebanon)",
+        trainjourneys: "Trans-Siberian Railway (Russia), Glacier Express (Switzerland), Rocky Mountaineer (Canada), Shinkansen Bullet Train (Japan), The Ghan (Australia), Bernina Express (Switzerland), Palace on Wheels (India), Jacobite Steam Train (UK), Rovos Rail (South Africa), Indian Pacific (Australia)",
+        islands: "Maldives (Maldives), Bora Bora (French Polynesia), Seychelles (Seychelles), Santorini (Greece), Maui (USA), Palawan (Philippines), Mauritius (Mauritius), Capri (Italy), Zanzibar (Tanzania), Jeju Island (South Korea)",
+        rainforests: "Amazon Rainforest (Brazil), Daintree Rainforest (Australia), Borneo Rainforest (Malaysia), Congo Rainforest (Democratic Republic of Congo), Monteverde Cloud Forest (Costa Rica), Tongass National Forest (USA), Sinharaja Forest (Sri Lanka), Valdivian Rainforest (Chile), Yasuni National Park (Ecuador), Madagascar Rainforest (Madagascar)",
+        biodiversity: "Madagascar (Madagascar), Sundaland (Indonesia), Amazon Basin (Brazil), Coral Triangle (Various – SE Asia & Pacific), Indo-Burma (Thailand & SE Asia), Western Ghats (India), Atlantic Forest (Brazil), Cape Floristic Region (South Africa), Himalayas (Nepal), New Zealand (New Zealand)"
+    };
+
+    function formatCategory(input) {
+        return input.toLowerCase().replace(/\s+/g, '');
+    }
+
+    function handleEnter(event, funcName) {
+        if (event.key === 'Enter') {
+            if (funcName === 'reply') reply();
+            if (funcName === 'rep') rep();
+        }
+    }
+
+    function reply() {
+        const userInput = document.getElementById("in").value.trim();
+        if (userInput === "") return;
+        const chatBox = document.getElementById("ai");
+        chatBox.innerHTML += `<div class="message user">${userInput}</div>`;
+        setTimeout(() => {
+            const formattedKey = formatCategory(userInput);
+            const response = touristPlacesWorld[formattedKey] || "Sorry, I don't have info on that place. Try another!";
+            chatBox.innerHTML += `<div class="message ai">${response}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 600);
+        document.getElementById("in").value = "";
+    }
+
+    const apiKey = "c4d184f9cf6e4a2c88c4517c8ab34ff7";
+    let lat, lon;
+    function getUserLocation() {
+        navigator.geolocation.getCurrentPosition(position => {
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+        }, () => {
+            console.warn("Failed to get location. Some features might not work.");
+        });
+    }
+       
+    const categoryMap = {
+        "restaurant": "catering.restaurant", "restaurants": "catering.restaurant", "cafe": "catering.cafe", "cafes": "catering.cafe", "coffee shop": "catering.cafe", "coffee": "catering.cafe", "bar": "catering.bar", "bars": "catering.bar", "hotel": "accommodation.hotel", "hotels": "accommodation.hotel", "park": "leisure.park", "parks": "leisure.park", "supermarket": "commercial.supermarket", "supermarkets": "commercial.supermarket", "mall": "commercial.shopping_mall", "malls": "commercial.shopping_mall", "shopping mall": "commercial.shopping_mall", "shopping center": "commercial.shopping_mall", "bakery": "catering.bakery", "bakeries": "catering.bakery", "clothing store": "commercial.clothes", "clothes shop": "commercial.clothes", "clothes": "commercial.clothes", "bookstore": "commercial.books", "book store": "commercial.books", "pharmacy": "healthcare.pharmacy", "pharmacies": "healthcare.pharmacy", "hospital": "healthcare.hospital", "clinic": "healthcare.clinic", "atm": "finance.atm", "bank": "finance.bank", "fast_food": "catering.fast_food", "ice_cream": "catering.ice_cream", "pub": "catering.pub", "museum": "entertainment.museum", "cinema": "entertainment.cinema", "zoo": "entertainment.zoo", "theatre": "entertainment.theatre", "theatres": "entertainment.theatre", "nightclub": "entertainment.nightclub", "nightclubs": "entertainment.nightclub", "clubs": "entertainment.nightclub", "casino": "entertainment.casino", "beach": "natural.beach", "beachs": "natural.beach", "forest": "natural.forest", "forests": "natural.forest", "viewpoint": "tourism.viewpoint", "viewpoints": "tourism.viewpoint", "camp_site": "accommodation.camping", "camp_sites": "accommodation.camping", "monument": "tourism.sights", "attraction": "tourism.attraction", "castle": "tourism.castle", "theme_park": "entertainment.theme_park", "theme_parks": "entertainment.theme_park", "hospitals": "healthcare.hospital", "doctor": "healthcare.doctor", "dental_clinic": "healthcare.dentist", "bus_station": "transport.bus_station", "train_station": "transport.train_station", "airport": "transport.airport", "car_rental": "service.car_rental", "fuel": "service.vehicle.fuel", "gas_station": "service.vehicle.fuel", "petrol_stations": "service.vehicle.fuel", "parking": "service.vehicle.parking",
+    };
+
+    function normalizeInput(input) {
+        return input.toLowerCase().trim().replace(/[_\s]+/g, "_");
+    }
+
+    function rep() {
+        if (lat === undefined || lon === undefined) {
+            alert("Location not available yet. Please allow location access and try again.");
+            return;
+        }
+        const query1 = document.getElementById("inp").value.trim();
+        const chatbox = document.getElementById("ai1");
+        
+        if (!query1) {
+            alert("Please enter a place type.");
+            return;
+        }
+
+        chatbox.innerHTML += `<div class="message user">${query1}</div>`;
+        const query = normalizeInput(query1);
+        const category = categoryMap[query];
+        
+        if (!category) {
+            setTimeout(() => {
+                chatbox.innerHTML += `<div class='message ai'>Sorry, I don’t recognize that category. Try something like: cafe, restaurant, hotel, park, pharmacy, bookstore, mall, etc.</div>`;
+                chatbox.scrollTop = chatbox.scrollHeight;
+            }, 600);
+            return;
+        }
+
+        const url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lon},${lat},10000&limit=5&apiKey=${apiKey}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                setTimeout(() => {
+                    if (!data.features || data.features.length === 0) {
+                        chatbox.innerHTML += "<div class='message ai'>No places found nearby.</div>";
+                    } else {
+                        let resHTML = "<div class='message ai'><strong>Found these nearby:</strong><br>";
+                        data.features.forEach(place => {
+                            const name = place.properties.name || "Unknown Place";
+                            const address = place.properties.formatted || "No address available";
+                            resHTML += `<br>• <strong>${name}</strong>: ${address}`;
+                        });
+                        resHTML += "</div>";
+                        chatbox.innerHTML += resHTML;
+                    }
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                }, 600);
+                document.getElementById("inp").value = "";
+            })
+            .catch(error => {
+                console.error("Error fetching places:", error);
+                chatbox.innerHTML += "<div class='message ai'>Failed to fetch places. Please try again later.</div>";
+            });
+    }
+    </script>
+</body>
+</html>
