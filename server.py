@@ -1,10 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
+from geopy.geocoders import Nominatim  # Import Geocoder
 import uuid
 
 app = Flask(__name__, template_folder='static')
 app.secret_key = 'your_secret_key'
+
+# Initialize Geocoder (User_agent should be unique to your app)
+geolocator = Nominatim(user_agent="traveloop_explorer")
 
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
@@ -75,7 +79,14 @@ def login():
 def dashboard():
     if 'logged_in' in session:
         # Now Flask will look in 'static/dashboard.html'
-        return render_template('homepage.html', name=session['name'])
+        return render_template('dashboard.html', name=session['name'])
+    return redirect(url_for('home'))
+
+@app.route('/chatbot')
+def chatbot():
+    if 'logged_in' in session:
+        # Flask looks for static/mapping3.html based on your app config
+        return render_template('pr.html')
     return redirect(url_for('home'))
 if __name__ == '__main__':
     app.run(debug=True)
