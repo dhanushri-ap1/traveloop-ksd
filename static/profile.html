@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traveloop — Traveller Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cream:      #fdf8f3;
+  --cream2:     #f9f1e8;
+  --cream3:     #f2e8da;
+  --coral:      #f07857;
+  --coral2:     #e85d38;
+  --coral-lt:   #fce8e0;
+  --peach:      #f4a882;
+  --blush:      #f5c3b0;
+  --terracotta: #c9633a;
+  --amber:      #f5a623;
+  --amber-lt:   #fef3dc;
+  --sage:       #7dab8a;
+  --sage-lt:    #e4f0e8;
+  --sky:        #6aafe6;
+  --sky-lt:     #deeef9;
+  --lavender:   #a888d4;
+  --lav-lt:     #ede3f7;
+  --ink:        #2c1f14;
+  --ink2:       #4a3728;
+  --muted:      #9b8579;
+  --muted2:     #c4a99a;
+  --border:     rgba(240,120,87,0.15);
+  --border2:    rgba(240,120,87,0.3);
+  --shadow:     rgba(44,31,20,0.08);
+  --shadow2:    rgba(44,31,20,0.18);
+  --playfair:   'Playfair Display', Georgia, serif;
+  --dm:         'DM Sans', sans-serif;
+  --mono:       'DM Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--dm);
+  min-height: 100vh;
+}
+
+/* ─── Blobs ─── */
+.bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; }
+.blob-1 { width: 700px; height: 700px; background: radial-gradient(circle, #f4a882, transparent 70%); top: -250px; right: -150px; }
+.blob-2 { width: 500px; height: 500px; background: radial-gradient(circle, #fce8e0, transparent 70%); bottom: 0;    left: -150px; }
+.blob-3 { width: 350px; height: 350px; background: radial-gradient(circle, #e4f0e8, transparent 70%); top: 50%;    left: 35%; }
+.blob-4 { width: 280px; height: 280px; background: radial-gradient(circle, #deeef9, transparent 70%); bottom: 10%; right: 10%; }
+
+/* ─── Layout ─── */
+.wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ─── Top nav bar ─── */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(253,248,243,0.82); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+.topnav-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.nav-logo-icon {
+  width: 34px; height: 34px; border-radius: 11px;
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 3px 12px rgba(240,120,87,0.35);
+}
+.nav-logo-text { font-family: var(--playfair); font-size: 20px; font-weight: 700; color: var(--ink); }
+.nav-logo-text span { color: var(--coral); }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-link {
+  padding: 7px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; background: none;
+}
+.nav-link:hover { color: var(--ink); background: var(--coral-lt); }
+.nav-link.primary {
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  color: white;
+  box-shadow: 0 3px 14px rgba(240,120,87,0.3);
+}
+.nav-link.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(240,120,87,0.4); }
+
+/* ─── Animations ─── */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes float    { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-12px) rotate(4deg)} }
+@keyframes badgePop { 0%{opacity:0;transform:scale(0.5) translateY(12px)} 70%{transform:scale(1.06) translateY(-2px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes shimmer  { 0%{background-position:-300% center} 100%{background-position:300% center} }
+@keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(125,171,138,0.5)} 50%{box-shadow:0 0 0 7px rgba(125,171,138,0)} }
+
+/* ─── Cover / Hero ─── */
+.cover {
+  position: relative; border-radius: 28px; overflow: hidden;
+  background: linear-gradient(135deg, var(--coral) 0%, var(--peach) 50%, var(--amber) 100%);
+  padding: 48px 44px 90px;
+  box-shadow: 0 12px 56px rgba(240,120,87,0.28);
+  animation: fadeUp 0.6s ease both;
+}
+.cover::before {
+  content: ''; position: absolute; top: -80px; right: -80px;
+  width: 360px; height: 360px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+.cover::after {
+  content: ''; position: absolute; bottom: -100px; right: 100px;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+}
+.cover-deco {
+  position: absolute; top: 24px; right: 44px;
+  font-size: 90px; opacity: 0.15;
+  animation: float 7s ease-in-out infinite;
+  pointer-events: none; z-index: 0;
+}
+.cover-deco2 {
+  position: absolute; bottom: 60px; right: 200px;
+  font-size: 44px; opacity: 0.12;
+  animation: float 5s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+.cover-top {
+  position: relative; z-index: 2;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+}
+.cover-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 100px; padding: 5px 14px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.9); margin-bottom: 18px;
+  backdrop-filter: blur(8px);
+}
+.cover-name {
+  font-family: var(--playfair); font-size: 44px; font-weight: 700; color: white;
+  line-height: 1.1; margin-bottom: 8px;
+}
+.cover-name em { font-style: italic; }
+.cover-bio {
+  font-size: 14.5px; color: rgba(255,255,255,0.82); line-height: 1.65;
+  max-width: 420px; margin-bottom: 20px;
+}
+.cover-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cover-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 100px; padding: 6px 14px;
+  font-size: 12.5px; color: white; font-weight: 500;
+  backdrop-filter: blur(6px);
+  transition: background 0.2s;
+}
+.cover-chip:hover { background: rgba(255,255,255,0.28); }
+
+/* Avatar block */
+.cover-avatar-block { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 2; }
+.avatar-outer {
+  width: 108px; height: 108px; border-radius: 30px;
+  background: rgba(255,255,255,0.22);
+  border: 2.5px solid rgba(255,255,255,0.55);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--playfair); font-size: 44px; font-weight: 700; color: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.4);
+  position: relative;
+}
+.avatar-status-dot {
+  position: absolute; bottom: -5px; right: -5px;
+  width: 22px; height: 22px; border-radius: 8px;
+  background: var(--sage); border: 3px solid rgba(244,168,130,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; animation: pulse 2.4s infinite;
+}
+.cover-edit-btn {
+  background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 10px; padding: 7px 16px;
+  font-family: var(--dm); font-size: 12px; font-weight: 600; color: white;
+  cursor: pointer; transition: all 0.2s; backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+.cover-edit-btn:hover { background: rgba(255,255,255,0.32); }
+
+/* ─── Floating stat cards that overlap the cover ─── */
+.stat-float {
+  position: relative; z-index: 5;
+  margin-top: -48px; padding: 0 8px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  animation: fadeUp 0.5s 0.2s ease both; opacity: 0;
+}
+.sf-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px 20px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  box-shadow: 0 6px 28px var(--shadow2);
+  cursor: default;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+}
+.sf-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--sfc, linear-gradient(90deg, var(--coral), var(--peach)));
+  border-radius: 20px 20px 0 0;
+}
+.sf-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px var(--shadow2); }
+.sf-icon { font-size: 22px; margin-bottom: 4px; }
+.sf-val { font-family: var(--playfair); font-size: 30px; font-weight: 700; color: var(--ink); line-height: 1; }
+.sf-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* ─── Section heading ─── */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.section-title {
+  font-family: var(--playfair); font-size: 20px; font-weight: 700; color: var(--ink);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title-icon {
+  width: 34px; height: 34px; border-radius: 11px;
+  background: var(--coral-lt);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.section-action {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--coral); cursor: pointer; background: none; border: none;
+  padding: 6px 14px; border-radius: 9px; transition: background 0.2s;
+}
+.section-action:hover { background: var(--coral-lt); }
+
+/* ─── Subsection label ─── */
+.sublabel {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sublabel::after { content:''; flex:1; height:1px; background: var(--border); }
+
+/* ─── Country badge grid ─── */
+.country-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+.cbadge {
+  position: relative; overflow: hidden;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 18px 10px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  animation: badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.cbadge::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--coral-lt), transparent 60%);
+  opacity: 0; transition: opacity 0.2s;
+}
+.cbadge:hover { border-color: var(--coral); transform: translateY(-5px) scale(1.03); box-shadow: 0 10px 32px rgba(240,120,87,0.2); }
+.cbadge:hover::before { opacity: 1; }
+
+/* Visited ribbon */
+.cbadge-ribbon {
+  position: absolute; top: 9px; right: -22px;
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 700; color: white; padding: 2px 26px;
+  transform: rotate(35deg);
+}
+.cbadge.visited .cbadge-ribbon { background: linear-gradient(135deg, var(--coral), var(--peach)); }
+.cbadge.wishlist .cbadge-ribbon { background: linear-gradient(135deg, var(--lavender), #c4a8e8); }
+
+.cbadge.wishlist { opacity: 0.62; border-style: dashed; }
+.cbadge.wishlist:hover { opacity: 1; }
+
+.cbadge-flag  { font-size: 34px; line-height: 1; position: relative; z-index: 1; }
+.cbadge-name  { font-size: 11.5px; font-weight: 600; color: var(--ink); position: relative; z-index: 1; line-height: 1.2; }
+.cbadge-city  { font-family: var(--mono); font-size: 9px; color: var(--muted); position: relative; z-index: 1; }
+.cbadge-year  {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  padding: 2px 9px; border-radius: 100px; position: relative; z-index: 1; margin-top: 2px;
+}
+.cbadge.visited .cbadge-year  { background: var(--coral-lt); color: var(--coral); }
+.cbadge.wishlist .cbadge-year { background: var(--lav-lt);   color: var(--lavender); }
+
+/* Stamp overlay on hover */
+.cbadge.visited::after {
+  content: '✓';
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+  font-size: 48px; font-weight: 900; color: rgba(240,120,87,0.12);
+  transition: transform 0.3s;
+  pointer-events: none; z-index: 0;
+}
+.cbadge.visited:hover::after { transform: translate(-50%,-50%) scale(1.2); }
+
+/* ─── Place stamps list ─── */
+.stamp-list { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+.stamp-card {
+  display: flex; align-items: center; gap: 13px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 16px;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.stamp-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--sc-color, var(--coral));
+  border-radius: 4px 0 0 4px;
+}
+.stamp-card:hover { border-color: var(--coral); transform: translateX(4px); box-shadow: 0 4px 18px var(--shadow); }
+
+.sc-icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  background: var(--sc-bg, var(--coral-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.sc-info { flex: 1; min-width: 0; }
+.sc-name    { font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-country { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+.sc-right   { text-align: right; flex-shrink: 0; }
+.sc-date    { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-bottom: 5px; }
+.sc-pill {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px;
+}
+.pill-done     { background: var(--sage-lt);  color: var(--sage);     border:1px solid rgba(125,171,138,0.3); }
+.pill-wishlist { background: var(--lav-lt);   color: var(--lavender); border:1px solid rgba(168,136,212,0.3); }
+.pill-upcoming { background: var(--amber-lt); color: var(--amber);    border:1px solid rgba(245,166,35,0.3); }
+
+/* ─── Achievement badges ─── */
+.ach-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.ach {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 18px 12px 14px;
+  background: var(--cream); border: 1.5px solid var(--border); border-radius: 18px;
+  text-align: center; cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  animation: badgePop 0.6s ease both;
+  position: relative;
+}
+.ach.locked { opacity: 0.38; filter: grayscale(1); }
+.ach.locked:hover { opacity: 0.6; filter: grayscale(0.5); }
+.ach:not(.locked):hover { transform: translateY(-5px) scale(1.04); border-color: var(--coral); box-shadow: 0 8px 28px rgba(240,120,87,0.2); }
+
+.ach-ring {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--ar1, var(--coral-lt)), var(--ar2, var(--amber-lt)));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.ach:not(.locked) .ach-ring { box-shadow: 0 4px 14px rgba(240,120,87,0.2); }
+.ach-name { font-size: 11px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+.ach-desc { font-family: var(--mono); font-size: 8.5px; color: var(--muted); line-height: 1.3; }
+.ach-unlocked-badge {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 6px;
+  background: var(--sage); border: 2px solid white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: white;
+}
+
+/* ─── Travel style bars ─── */
+.style-list { display: flex; flex-direction: column; gap: 14px; }
+.style-row { display: flex; flex-direction: column; gap: 6px; }
+.style-row-head { display: flex; justify-content: space-between; align-items: center; }
+.style-label { font-size: 13px; font-weight: 500; color: var(--ink2); display: flex; align-items: center; gap: 7px; }
+.style-label span { font-size: 15px; }
+.style-pct { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); }
+.style-track { height: 9px; background: var(--cream3); border-radius: 100px; overflow: hidden; }
+.style-fill  { height: 100%; border-radius: 100px; width: 0%; transition: width 1.3s cubic-bezier(0.4,0,0.2,1); }
+
+/* ─── World map banner ─── */
+.world-banner {
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink2) 100%);
+  border-radius: 22px; padding: 26px 30px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  box-shadow: 0 8px 40px rgba(44,31,20,0.2);
+  position: relative; overflow: hidden;
+}
+.world-banner::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(240,120,87,0.18), transparent 55%);
+  pointer-events: none;
+}
+.wb-left { z-index: 1; }
+.wb-title { font-family: var(--playfair); font-size: 22px; font-style: italic; color: white; margin-bottom: 4px; }
+.wb-sub   { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); margin-bottom: 16px; }
+.wb-flags { display: flex; flex-wrap: wrap; gap: 7px; }
+.wb-chip  {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 100px; padding: 5px 13px;
+  font-size: 12.5px; color: rgba(255,255,255,0.88);
+  cursor: pointer; transition: all 0.2s;
+}
+.wb-chip:hover { background: rgba(255,255,255,0.18); border-color: var(--coral); }
+.wb-chip-flag { font-size: 17px; }
+.wb-right { z-index: 1; display: flex; flex-direction: column; align-items: flex-end; }
+.wb-count { font-family: var(--playfair); font-size: 58px; font-weight: 700; color: white; line-height: 1; }
+.wb-count-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); }
+
+/* ─── Two-col grid ─── */
+.two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; }
+.col { display: flex; flex-direction: column; gap: 22px; }
+
+/* ─── Card wrapper ─── */
+.card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 22px; overflow: hidden;
+  box-shadow: 0 2px 18px var(--shadow);
+  animation: fadeUp 0.5s ease both;
+}
+.card-body { padding: 22px 24px; }
+
+/* ─── Sections spacing ─── */
+.sections { display: flex; flex-direction: column; gap: 26px; margin-top: 28px; }
+
+/* ─── Modal ─── */
+.overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(44,31,20,0.38); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--cream); border: 1px solid var(--border);
+  border-radius: 26px; padding: 34px;
+  width: 100%; max-width: 500px;
+  box-shadow: 0 28px 90px rgba(44,31,20,0.22);
+  animation: fadeUp 0.3s ease;
+}
+.modal-title { font-family: var(--playfair); font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.modal-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 24px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.field input, .field textarea, .field select {
+  background: white; border: 1.5px solid var(--border);
+  border-radius: 13px; padding: 11px 15px;
+  font-family: var(--dm); font-size: 14px; color: var(--ink);
+  outline: none; transition: border-color 0.2s; width: 100%;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--coral); }
+.field textarea { height: 88px; resize: none; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 22px; }
+.modal-btn {
+  flex: 1; padding: 12px; border-radius: 13px; border: none;
+  font-family: var(--dm); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.modal-btn.primary {
+  background: linear-gradient(135deg, var(--coral), var(--peach)); color: white;
+  box-shadow: 0 4px 18px rgba(240,120,87,0.32);
+}
+.modal-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 7px 26px rgba(240,120,87,0.42); }
+.modal-btn.ghost { background: white; border: 1.5px solid var(--border2); color: var(--ink2); }
+.modal-btn.ghost:hover { border-color: var(--coral); color: var(--coral); }
+
+/* ─── Toast ─── */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: white; border-radius: 13px;
+  padding: 12px 24px; font-size: 13.5px; font-weight: 500;
+  opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999;
+  box-shadow: 0 8px 36px rgba(44,31,20,0.28);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Stagger ─── */
+.cbadge:nth-child(1)  { animation-delay:0.05s } .cbadge:nth-child(2)  { animation-delay:0.1s  }
+.cbadge:nth-child(3)  { animation-delay:0.15s } .cbadge:nth-child(4)  { animation-delay:0.2s  }
+.cbadge:nth-child(5)  { animation-delay:0.25s } .cbadge:nth-child(6)  { animation-delay:0.3s  }
+.cbadge:nth-child(7)  { animation-delay:0.35s } .cbadge:nth-child(8)  { animation-delay:0.4s  }
+.cbadge:nth-child(9)  { animation-delay:0.45s } .cbadge:nth-child(10) { animation-delay:0.5s  }
+.ach:nth-child(1){animation-delay:0.08s} .ach:nth-child(2){animation-delay:0.16s}
+.ach:nth-child(3){animation-delay:0.24s} .ach:nth-child(4){animation-delay:0.32s}
+.ach:nth-child(5){animation-delay:0.40s} .ach:nth-child(6){animation-delay:0.48s}
+.ach:nth-child(7){animation-delay:0.56s} .ach:nth-child(8){animation-delay:0.64s}
+.sf-card:nth-child(1){animation-delay:0.25s} .sf-card:nth-child(2){animation-delay:0.32s}
+.sf-card:nth-child(3){animation-delay:0.39s} .sf-card:nth-child(4){animation-delay:0.46s}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--blush); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Background blobs -->
+<div class="bg-layer">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+
+<!-- Top nav -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a class="nav-logo" href="dashboard.html">
+      <div class="nav-logo-icon">✈</div>
+      <div class="nav-logo-text">Travel<span>oop</span></div>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="dashboard.html">Dashboard</a>
+      <button class="nav-link" onclick="openModal('editModal')">✏️ Edit Profile</button>
+      <button class="nav-link primary" onclick="openModal('countryModal')">🌍 Add Country</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Page content -->
+<div class="wrap">
+
+  <!-- Cover hero -->
+  <div class="cover" style="margin-bottom:0">
+    <div class="cover-deco">🌍</div>
+    <div class="cover-deco2">✈️</div>
+    <div class="cover-top">
+      <div>
+        <div class="cover-tag">✦ <span id="coverRole">Globe Trotter</span></div>
+        <div class="cover-name" id="coverName"><em>Your Name</em></div>
+        <div class="cover-bio" id="coverBio">Adventure seeker · Passport stamp collector · Always chasing the next horizon.</div>
+        <div class="cover-chips">
+          <div class="cover-chip">📍 <span id="coverLocation">Earth</span></div>
+          <div class="cover-chip">🗓 Since <span id="coverMember">2024</span></div>
+          <div class="cover-chip">🌐 <span id="coverContinents">0</span> Continents</div>
+          <div class="cover-chip">✈️ <span id="coverTrips">0</span> Trips</div>
+        </div>
+      </div>
+      <div class="cover-avatar-block">
+        <div class="avatar-outer" id="coverAvatar">
+          T
+          <div class="avatar-status-dot">✓</div>
+        </div>
+        <button class="cover-edit-btn" onclick="openModal('editModal')">✏️ Edit Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating stat cards -->
+  <div class="stat-float">
+    <div class="sf-card" style="--sfc:linear-gradient(90deg,var(--coral),var(--peach))">
+      <div class="sf-icon">🌍</div>
+      <div class="sf-val" id="statCountries">0</div>
+      <div class="sf-label">Countries Visited</div>
+    </div>
+    <div class="sf-card" style="--sfc:linear-gradient(90deg,var(--lavender),#c4a3e8)">
+      <div class="sf-icon">💜</div>
+      <div class="sf-val" id="statWishlist">0</div>
+      <div class="sf-label">On Wishlist</div>
+    </div>
+    <div class="sf-card" style="--sfc:linear-gradient(90deg,var(--amber),var(--peach))">
+      <div class="sf-icon">📍</div>
+      <div class="sf-val" id="statPlaces">0</div>
+      <div class="sf-label">Places Stamped</div>
+    </div>
+    <div class="sf-card" style="--sfc:linear-gradient(90deg,var(--sage),#a2d4ae)">
+      <div class="sf-icon">🏅</div>
+      <div class="sf-val" id="statAch">0</div>
+      <div class="sf-label">Achievements</div>
+    </div>
+  </div>
+
+  <!-- All sections -->
+  <div class="sections">
+
+    <!-- World banner -->
+    <div class="world-banner">
+      <div class="wb-left">
+        <div class="wb-title">Countries Conquered</div>
+        <div class="wb-sub">Your passport stamp collection</div>
+        <div class="wb-flags" id="worldFlags"></div>
+      </div>
+      <div class="wb-right">
+        <div class="wb-count" id="wbCount">0</div>
+        <div class="wb-count-label">Countries Visited</div>
+      </div>
+    </div>
+
+    <!-- Countries visited -->
+    <div class="card">
+      <div class="card-body">
+        <div class="section-head">
+          <div class="section-title">
+            <div class="section-title-icon">🗺</div>
+            Countries Visited
+          </div>
+          <button class="section-action" onclick="openModal('countryModal')">+ Add Country</button>
+        </div>
+        <div class="sublabel">Visited</div>
+        <div class="country-grid" id="visitedGrid"></div>
+        <div class="sublabel" style="margin-top:22px">Wishlist</div>
+        <div class="country-grid" id="wishlistGrid"></div>
+      </div>
+    </div>
+
+    <!-- Two-col -->
+    <div class="two-col">
+      <!-- LEFT -->
+      <div class="col">
+
+        <!-- Places stamped -->
+        <div class="card">
+          <div class="card-body">
+            <div class="section-head">
+              <div class="section-title">
+                <div class="section-title-icon">📍</div>
+                Places Stamped
+              </div>
+              <button class="section-action" onclick="openModal('placeModal')">+ Add Place</button>
+            </div>
+            <div class="stamp-list" id="stampList"></div>
+          </div>
+        </div>
+
+        <!-- Travel style -->
+        <div class="card">
+          <div class="card-body">
+            <div class="section-head">
+              <div class="section-title">
+                <div class="section-title-icon">📊</div>
+                Travel Style
+              </div>
+            </div>
+            <div class="style-list" id="styleList"></div>
+          </div>
+        </div>
+
+      </div>
+      <!-- RIGHT -->
+      <div class="col">
+
+        <!-- Achievements -->
+        <div class="card">
+          <div class="card-body">
+            <div class="section-head">
+              <div class="section-title">
+                <div class="section-title-icon">🏅</div>
+                Achievements
+              </div>
+            </div>
+            <div class="ach-grid" id="achGrid"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div><!-- /wrap -->
+
+<!-- ── Edit Profile Modal ── -->
+<div class="overlay" id="editModal" onclick="overlayClose(event,'editModal')">
+  <div class="modal">
+    <div class="modal-title">Edit Profile</div>
+    <div class="modal-sub">Your travel identity</div>
+    <div class="field">
+      <label>Display Name</label>
+      <input id="eName" type="text" placeholder="e.g. Arjun Sharma">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Location</label>
+        <input id="eLocation" type="text" placeholder="Chennai, India">
+      </div>
+      <div class="field">
+        <label>Travel Role</label>
+        <input id="eRole" type="text" placeholder="Globe Trotter">
+      </div>
+    </div>
+    <div class="field">
+      <label>Bio</label>
+      <textarea id="eBio" placeholder="Tell your travel story…"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn ghost" onclick="closeModal('editModal')">Cancel</button>
+      <button class="modal-btn primary" onclick="saveProfile()">Save ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Country Modal ── -->
+<div class="overlay" id="countryModal" onclick="overlayClose(event,'countryModal')">
+  <div class="modal">
+    <div class="modal-title">Add a Country</div>
+    <div class="modal-sub">Stamp your passport</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Flag Emoji</label>
+        <input id="cFlag" type="text" placeholder="🇯🇵" maxlength="4">
+      </div>
+      <div class="field">
+        <label>Country Name</label>
+        <input id="cName" type="text" placeholder="Japan">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>City / Region</label>
+        <input id="cCity" type="text" placeholder="Tokyo">
+      </div>
+      <div class="field">
+        <label>Year</label>
+        <input id="cYear" type="text" placeholder="2024" maxlength="4">
+      </div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="cStatus">
+        <option value="visited">✅ Visited</option>
+        <option value="wishlist">💜 Wishlist</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn ghost" onclick="closeModal('countryModal')">Cancel</button>
+      <button class="modal-btn primary" onclick="saveCountry()">Add Country 🌍</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Place Modal ── -->
+<div class="overlay" id="placeModal" onclick="overlayClose(event,'placeModal')">
+  <div class="modal">
+    <div class="modal-title">Stamp a Place</div>
+    <div class="modal-sub">Log a city, landmark or experience</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Emoji</label>
+        <input id="pIcon" type="text" placeholder="🏯" maxlength="4">
+      </div>
+      <div class="field">
+        <label>Place Name</label>
+        <input id="pName" type="text" placeholder="Senso-ji Temple">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Country</label>
+        <input id="pCountry" type="text" placeholder="Japan 🇯🇵">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input id="pDate" type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="pStatus">
+        <option value="done">✅ Visited</option>
+        <option value="upcoming">🔜 Upcoming</option>
+        <option value="wishlist">💜 Wishlist</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn ghost" onclick="closeModal('placeModal')">Cancel</button>
+      <button class="modal-btn primary" onclick="savePlace()">Stamp It 📍</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Helpers ── */
+const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const set = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+/* ── Defaults ── */
+const DEF_COUNTRIES = [
+  { flag:'🇮🇳', country:'India',     city:'Chennai',   year:'2019', status:'visited' },
+  { flag:'🇦🇪', country:'UAE',       city:'Dubai',     year:'2022', status:'visited' },
+  { flag:'🇸🇬', country:'Singapore', city:'Singapore', year:'2023', status:'visited' },
+  { flag:'🇯🇵', country:'Japan',     city:'Tokyo',     year:'',     status:'wishlist' },
+  { flag:'🇫🇷', country:'France',    city:'Paris',     year:'',     status:'wishlist' },
+  { flag:'🇮🇩', country:'Indonesia', city:'Bali',      year:'',     status:'wishlist' },
+];
+
+const DEF_PLACES = [
+  { icon:'🏙', name:'Burj Khalifa',     country:'UAE 🇦🇪',       date:'2022-03-15', status:'done' },
+  { icon:'🌉', name:'Marina Bay Sands', country:'Singapore 🇸🇬',  date:'2023-07-10', status:'done' },
+  { icon:'🕌', name:'Hawa Mahal',       country:'India 🇮🇳',      date:'2020-01-05', status:'done' },
+  { icon:'🗼', name:'Eiffel Tower',     country:'France 🇫🇷',     date:'',           status:'wishlist' },
+  { icon:'🏯', name:'Senso-ji',         country:'Japan 🇯🇵',      date:'',           status:'wishlist' },
+  { icon:'🌴', name:'Ubud Rice Terraces',country:'Indonesia 🇮🇩', date:'',           status:'wishlist' },
+];
+
+const ACHIEVEMENTS = [
+  { icon:'✈️', name:'First Flight',   desc:'Took your first trip',    r1:'#fce8e0',r2:'#fef3dc', auto: c=>c.visited>=1 },
+  { icon:'🌏', name:'Asia Explorer',  desc:'Visited 3 Asian nations',  r1:'#deeef9',r2:'#e4f0e8', auto: c=>c.visited>=3 },
+  { icon:'🏙', name:'City Hopper',    desc:'Stamped 5+ places',        r1:'#ede3f7',r2:'#fce8e0', auto: c=>c.places>=5 },
+  { icon:'💼', name:'Packed & Ready', desc:'Planned your first trip',  r1:'#fef3dc',r2:'#e4f0e8', auto: c=>c.trips>=1 },
+  { icon:'🗺', name:'Cartographer',   desc:'Added 10 places',          r1:'#e4f0e8',r2:'#fef3dc', auto: c=>c.places>=10 },
+  { icon:'🌍', name:'Globe Trotter',  desc:'Visit 10 countries',       r1:'#fce8e0',r2:'#deeef9', auto: c=>c.visited>=10 },
+  { icon:'🛫', name:'Frequent Flyer', desc:'5+ trips planned',         r1:'#e4f0e8',r2:'#fef3dc', auto: c=>c.trips>=5 },
+  { icon:'🏅', name:'Passport Pro',   desc:'Visit 15 countries',       r1:'#fef3dc',r2:'#ede3f7', auto: c=>c.visited>=15 },
+];
+
+const STYLES = [
+  { label:'Adventure & Outdoors', icon:'🏔',  pct:80, fill:'linear-gradient(90deg,var(--coral),var(--peach))' },
+  { label:'Food & Cuisine',       icon:'🍜',  pct:90, fill:'linear-gradient(90deg,var(--amber),var(--peach))' },
+  { label:'Culture & Heritage',   icon:'🏛',  pct:65, fill:'linear-gradient(90deg,var(--lavender),#c4a3e8)' },
+  { label:'Beach & Leisure',      icon:'🏖',  pct:55, fill:'linear-gradient(90deg,var(--sky),#8ad0f5)' },
+  { label:'Budget Travel',        icon:'💰',  pct:70, fill:'linear-gradient(90deg,var(--sage),#a2d4ae)' },
+];
+
+const PLACE_COLORS = [
+  ['var(--coral)','var(--coral-lt)'],
+  ['var(--lavender)','var(--lav-lt)'],
+  ['var(--amber)','var(--amber-lt)'],
+  ['var(--sage)','var(--sage-lt)'],
+  ['var(--sky)','var(--sky-lt)'],
+];
+
+/* ── Boot ── */
+window.addEventListener('DOMContentLoaded', () => {
+  initProfile();
+  renderAll();
+  setTimeout(animateStyles, 600);
+});
+
+function initProfile() {
+  const stored  = localStorage.getItem('currentUser') || 'Traveller';
+  const name    = stored.charAt(0).toUpperCase() + stored.slice(1);
+  const profile = get('traveloop_profile') || {};
+  const dispName = profile.name || name;
+
+  document.getElementById('coverName').innerHTML   = `<em>${dispName}</em>`;
+  document.getElementById('coverAvatar').childNodes[0].textContent = dispName.charAt(0).toUpperCase();
+  document.getElementById('coverBio').textContent  = profile.bio      || 'Adventure seeker · Passport stamp collector · Always chasing the next horizon.';
+  document.getElementById('coverLocation').textContent = profile.location || 'Earth';
+  document.getElementById('coverRole').textContent     = profile.role     || 'Globe Trotter';
+  document.getElementById('coverMember').textContent   = profile.member   || new Date().getFullYear();
+
+  const trips = get('traveloop_trips') || [];
+  document.getElementById('coverTrips').textContent = trips.length;
+}
+
+function renderAll() {
+  renderCountries();
+  renderPlaces();
+  renderAchievements();
+  renderStyles();
+  renderWorldBanner();
+  updateStatCards();
+}
+
+/* ── Countries ── */
+function renderCountries() {
+  const all      = get('traveloop_countries') || DEF_COUNTRIES;
+  if (!get('traveloop_countries')) set('traveloop_countries', DEF_COUNTRIES);
+  const visited  = all.filter(c=>c.status==='visited');
+  const wishlist = all.filter(c=>c.status==='wishlist');
+
+  const makeGrid = (list, type) => list.length
+    ? list.map(c=>`
+      <div class="cbadge ${type}" onclick="toast('${c.flag} ${c.country}!')">
+        <div class="cbadge-ribbon">${type==='visited'?'Visited':'Wishlist'}</div>
+        <div class="cbadge-flag">${c.flag}</div>
+        <div class="cbadge-name">${c.country}</div>
+        <div class="cbadge-city">${c.city}</div>
+        <div class="cbadge-year">${type==='visited' ? (c.year||'—') : '💜 Soon'}</div>
+      </div>`).join('')
+    : `<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:13px">${type==='visited'?'No countries visited yet — add some! 🌍':'Your wishlist is empty — dream big! 💜'}</div>`;
+
+  document.getElementById('visitedGrid').innerHTML  = makeGrid(visited,  'visited');
+  document.getElementById('wishlistGrid').innerHTML = makeGrid(wishlist, 'wishlist');
+
+  // continents rough count
+  const continentHints = ['India','Sri Lanka','Nepal','Japan','Singapore','Thailand','Indonesia','UAE','Qatar','China','Korea'];
+  const euroCountries  = ['France','Germany','Italy','Spain','UK','Greece','Portugal'];
+  let cont = 0;
+  if (visited.some(c=>continentHints.includes(c.country))) cont++;
+  if (visited.some(c=>euroCountries.includes(c.country))) cont++;
+  if (visited.some(c=>['USA','Canada','Mexico','Brazil'].includes(c.country))) cont++;
+  if (visited.some(c=>['Australia','New Zealand'].includes(c.country))) cont++;
+  document.getElementById('coverContinents').textContent = Math.max(cont,visited.length>0?1:0);
+}
+
+/* ── World banner ── */
+function renderWorldBanner() {
+  const all     = get('traveloop_countries') || DEF_COUNTRIES;
+  const visited = all.filter(c=>c.status==='visited');
+  document.getElementById('wbCount').textContent = visited.length;
+  document.getElementById('worldFlags').innerHTML = visited.length
+    ? visited.map(c=>`<div class="wb-chip" onclick="toast('${c.flag} ${c.country}')"><span class="wb-chip-flag">${c.flag}</span>${c.country}</div>`).join('')
+    : `<span style="color:rgba(255,255,255,0.45);font-size:13px">No countries yet — add your first! 🌍</span>`;
+}
+
+/* ── Places ── */
+function renderPlaces() {
+  const places = get('traveloop_places') || DEF_PLACES;
+  if (!get('traveloop_places')) set('traveloop_places', DEF_PLACES);
+
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  const pilCls = { done:'pill-done', wishlist:'pill-wishlist', upcoming:'pill-upcoming' };
+  const pilLbl = { done:'Visited', wishlist:'Wishlist', upcoming:'Upcoming' };
+
+  document.getElementById('stampList').innerHTML = places.length
+    ? places.map((p,i)=>{
+        const [col,bg] = PLACE_COLORS[i%PLACE_COLORS.length];
+        return `<div class="stamp-card" style="--sc-color:${col};--sc-bg:${bg}">
+          <div class="sc-icon">${p.icon||'📍'}</div>
+          <div class="sc-info">
+            <div class="sc-name">${p.name}</div>
+            <div class="sc-country">${p.country}</div>
+          </div>
+          <div class="sc-right">
+            <div class="sc-date">${fmt(p.date)}</div>
+            <div class="sc-pill ${pilCls[p.status]||'pill-done'}">${pilLbl[p.status]||'Visited'}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">No places stamped yet 📍</div>`;
+}
+
+/* ── Achievements ── */
+function renderAchievements() {
+  const countries = get('traveloop_countries') || DEF_COUNTRIES;
+  const places    = get('traveloop_places')    || DEF_PLACES;
+  const trips     = get('traveloop_trips')     || [];
+  const ctx = {
+    visited: countries.filter(c=>c.status==='visited').length,
+    places:  places.length,
+    trips:   trips.length,
+  };
+
+  let unlocked = 0;
+  const html = ACHIEVEMENTS.map(a => {
+    const ok = a.auto(ctx);
+    if (ok) unlocked++;
+    return `<div class="ach ${ok?'':'locked'}" onclick="toast('${ok?'🏅 '+a.name+' — unlocked!':'🔒 '+a.desc}')"
+      style="--ar1:${a.r1};--ar2:${a.r2}">
+      ${ok?'<div class="ach-unlocked-badge">✓</div>':''}
+      <div class="ach-ring">${a.icon}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('achGrid').innerHTML = html;
+  document.getElementById('statAch').textContent = unlocked;
+}
+
+/* ── Styles ── */
+function renderStyles() {
+  document.getElementById('styleList').innerHTML = STYLES.map((s,i)=>`
+    <div class="style-row">
+      <div class="style-row-head">
+        <div class="style-label"><span>${s.icon}</span>${s.label}</div>
+        <div class="style-pct">${s.pct}%</div>
+      </div>
+      <div class="style-track">
+        <div class="style-fill" id="stf${i}" style="background:${s.fill}"></div>
+      </div>
+    </div>`).join('');
+}
+function animateStyles() {
+  STYLES.forEach((_,i)=>{
+    const el = document.getElementById(`stf${i}`);
+    if(el) el.style.width = STYLES[i].pct+'%';
+  });
+}
+
+/* ── Stat cards ── */
+function updateStatCards() {
+  const countries = get('traveloop_countries') || DEF_COUNTRIES;
+  const places    = get('traveloop_places')    || DEF_PLACES;
+  document.getElementById('statCountries').textContent = countries.filter(c=>c.status==='visited').length;
+  document.getElementById('statWishlist').textContent  = countries.filter(c=>c.status==='wishlist').length;
+  document.getElementById('statPlaces').textContent    = places.length;
+}
+
+/* ── Save profile ── */
+function saveProfile() {
+  const name = document.getElementById('eName').value.trim();
+  if (!name) { toast('Please enter your name'); return; }
+  const profile = get('traveloop_profile') || {};
+  profile.name     = name;
+  profile.location = document.getElementById('eLocation').value.trim() || profile.location;
+  profile.role     = document.getElementById('eRole').value.trim()     || profile.role;
+  profile.bio      = document.getElementById('eBio').value.trim()      || profile.bio;
+  profile.member   = profile.member || new Date().getFullYear();
+  set('traveloop_profile', profile);
+  localStorage.setItem('currentUser', name.toLowerCase());
+  closeModal('editModal');
+  initProfile(); renderAll();
+  setTimeout(animateStyles,500);
+  toast('✅ Profile saved!');
+}
+
+/* ── Save country ── */
+function saveCountry() {
+  const country = document.getElementById('cName').value.trim();
+  if (!country) { toast('Enter a country name'); return; }
+  const flag   = document.getElementById('cFlag').value.trim() || '🌐';
+  const list   = get('traveloop_countries') || DEF_COUNTRIES;
+  list.unshift({ flag, country, city: document.getElementById('cCity').value.trim()||'Various', year: document.getElementById('cYear').value.trim()||new Date().getFullYear(), status: document.getElementById('cStatus').value });
+  set('traveloop_countries', list);
+  closeModal('countryModal');
+  ['cFlag','cName','cCity','cYear'].forEach(id=>document.getElementById(id).value='');
+  renderAll(); setTimeout(animateStyles,500);
+  toast(`${flag} ${country} added!`);
+}
+
+/* ── Save place ── */
+function savePlace() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { toast('Enter a place name'); return; }
+  const places = get('traveloop_places') || DEF_PLACES;
+  places.unshift({ icon: document.getElementById('pIcon').value.trim()||'📍', name, country: document.getElementById('pCountry').value.trim()||'Unknown', date: document.getElementById('pDate').value, status: document.getElementById('pStatus').value });
+  set('traveloop_places', places);
+  closeModal('placeModal');
+  ['pIcon','pName','pCountry','pDate'].forEach(id=>document.getElementById(id).value='');
+  renderAll(); setTimeout(animateStyles,500);
+  toast(`📍 ${name} stamped!`);
+}
+
+/* ── Modals ── */
+function openModal(id) {
+  if (id === 'editModal') {
+    const p = get('traveloop_profile') || {};
+    const stored = localStorage.getItem('currentUser') || 'Traveller';
+    document.getElementById('eName').value     = p.name || stored.charAt(0).toUpperCase()+stored.slice(1);
+    document.getElementById('eLocation').value = p.location || '';
+    document.getElementById('eRole').value     = p.role || '';
+    document.getElementById('eBio').value      = p.bio || '';
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function overlayClose(e,id) { if(e.target.id===id) closeModal(id); }
+
+/* ── Toast ── */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
